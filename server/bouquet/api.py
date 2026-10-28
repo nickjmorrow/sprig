@@ -113,13 +113,10 @@ def create_app(
 
     @app.post("/api/items", dependencies=authed)
     def save_item(new: NewItem, response: Response):
-        if existing := store.find_by_canonical(new.url):
-            if existing["location"] != "inbox":
-                existing = store.apply_patch(existing["id"], {"location": "inbox"}, Store.now())
-            return Store.public(existing)
-        item = store.create_item(new.url, title=new.title, shared_text=new.text)
-        on_new_item()
-        response.status_code = 201
+        item, created = store.save_link(new.url, title=new.title, text=new.text)
+        if created:
+            on_new_item()
+            response.status_code = 201
         return Store.public(item)
 
     def public_feeds() -> list[dict]:
@@ -127,8 +124,9 @@ def create_app(
 
     @app.get("/api/changes", dependencies=authed)
     def changes(since: int = 0):
-        seq, items = store.changes_since(since)
-        return {"seq": seq, "items": items, "topics": store.topics(), "feeds": public_feeds()}
+        reset = store.needs_reset(since)
+        seq, items = store.changes_since(0 if reset else since)
+        return {"seq": seq, "items": items, "topics": store.topics(), "feeds": public_feeds(), "reset": reset}
 
     @app.patch("/api/items/{item_id}", dependencies=authed)
     def patch_item(item_id: str, patch: Patch):

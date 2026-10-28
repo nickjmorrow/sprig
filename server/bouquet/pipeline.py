@@ -94,8 +94,10 @@ def process_item(store: Store, item_id: str, *, http: httpx.Client, tagger: Tagg
     item = store.get_item(item_id)
     try:
         extracted = load(item, http)
-    except FetchError as error:
-        return store.update_item(item_id, status="failed", last_error=str(error)[:500], site=site_of(item["url"]))
+    except Exception as error:
+        # Anything, not just a failed fetch: an item left pending would block the queue behind it.
+        log.warning("processing %s failed: %r", item_id, error)
+        return store.update_item(item_id, status="failed", last_error=str(error)[:500] or repr(error), site=site_of(item["url"]))
     words = word_count(extracted.text)
     has_real_title = extracted.title != item["url"]
     # Tweets are short by nature; only an empty one (endpoint down) sends him to the web.

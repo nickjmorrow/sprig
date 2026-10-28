@@ -8,6 +8,7 @@ import json
 import sqlite3
 import threading
 import uuid
+from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -111,6 +112,21 @@ class Store:
     def public(item: dict) -> dict:
         return {key: value for key, value in item.items() if key not in INTERNAL_FIELDS and key != "deleted_at"}
 
+    @contextmanager
+    def _transaction(self):
+        """All-or-nothing for multi-statement changes; nested uses join the outer transaction."""
+        with self._lock:
+            if self._db.in_transaction:
+                yield
+                return
+            self._db.execute("BEGIN IMMEDIATE")
+            try:
+                yield
+            except BaseException:
+                self._db.execute("ROLLBACK")
+                raise
+            self._db.execute("COMMIT")
+
     def _next_seq(self) -> int:
         self._db.execute("UPDATE meta SET value = value + 1 WHERE key = 'seq'")
         return self._db.execute("SELECT value FROM meta WHERE key = 'seq'").fetchone()[0]
@@ -139,7 +155,7 @@ class Store:
         source_html: str | None = None,
     ) -> dict:
         item_id = str(uuid.uuid4())
-        with self._lock:
+        with self._transaction():
             self._db.execute(
                 """INSERT INTO items (id, url, canonical_url, kind, location, status, title, saved_at,
                                       feed_id, shared_text, source_html, seq)
@@ -178,7 +194,7 @@ class Store:
         for field in BOOL_FIELDS:
             if field in fields:
                 fields[field] = int(fields[field])
-        with self._lock:
+        with self._transaction():
             fields["seq"] = self._next_seq()
             assignments = ", ".join(f"{name} = ?" for name in fields)
             self._db.execute(f"UPDATE items SET {assignments} WHERE id = ?", (*fields.values(), item_id))
@@ -212,7 +228,7 @@ class Store:
 
     def apply_patch(self, item_id: str, changes: dict, at: str) -> dict:
         """Apply each changed field whose time is newer than that field's last accepted change."""
-        with self._lock:
+        with self._transaction():
             item = self.get_item(item_id)
             field_times = dict(item["field_times"])
             accepted = {}
@@ -234,7 +250,7 @@ class Store:
     def set_topics(self, names: list[str]) -> None:
         """Replace the topic list. Claude's tags that used a removed topic, and inbox items when a topic
         was added, are queued for re-tagging; tags he set himself just lose the removed names."""
-        with self._lock:
+        with self._transaction():
             added = set(names) - set(self.topics())
             self._db.execute("DELETE FROM topics")
             self._db.executemany("INSERT INTO topics (name, position) VALUES (?, ?)", [(n, i) for i, n in enumerate(names)])
@@ -250,7 +266,7 @@ class Store:
 
     def delete_item(self, item_id: str) -> None:
         """Soft delete, so devices hear about it; the link is freed so it can be saved again."""
-        with self._lock:
+        with self._transaction():
             item = self.get_item(item_id)
             self.update_item(
                 item_id,
@@ -262,8 +278,37 @@ class Store:
             )
 
     def purge_deleted(self, before: str) -> int:
-        with self._lock:
+        """Forgets old deletions. Devices that last synced before them get a full snapshot instead."""
+        with self._transaction():
+            newest = self._db.execute(
+                "SELECT MAX(seq) FROM items WHERE deleted = 1 AND deleted_at < ?", (before,)
+            ).fetchone()[0]
+            if newest is None:
+                return 0
+            self._db.execute(
+                "INSERT INTO meta (key, value) VALUES ('purged_seq', ?) "
+                "ON CONFLICT(key) DO UPDATE SET value = MAX(value, excluded.value)",
+                (newest,),
+            )
             return self._db.execute("DELETE FROM items WHERE deleted = 1 AND deleted_at < ?", (before,)).rowcount
+
+    def needs_reset(self, seq: int) -> bool:
+        """A device that missed purged deletions, or is ahead of a restored database, must start over."""
+        if seq == 0:
+            return False
+        with self._lock:
+            current = self._db.execute("SELECT value FROM meta WHERE key = 'seq'").fetchone()[0]
+            purged = self._db.execute("SELECT value FROM meta WHERE key = 'purged_seq'").fetchone()
+            return seq > current or (purged is not None and seq < purged[0])
+
+    def save_link(self, url: str, *, title: str | None = None, text: str | None = None) -> tuple[dict, bool]:
+        """The item for this link, created if new; an archived or feed copy moves back to the inbox."""
+        with self._transaction():
+            if existing := self.find_by_canonical(url):
+                if existing["location"] != "inbox":
+                    existing = self.apply_patch(existing["id"], {"location": "inbox"}, self.now())
+                return existing, False
+            return self.create_item(url, title=title, shared_text=text), True
 
     def stale_feed_items(self, saved_before: str) -> list[dict]:
         with self._lock:
@@ -297,7 +342,7 @@ class Store:
 
     def delete_feed(self, feed_id: str) -> None:
         """Drops the feed and its posts he never kept or starred."""
-        with self._lock:
+        with self._transaction():
             rows = self._db.execute(
                 "SELECT id FROM items WHERE feed_id = ? AND location = 'feed' AND favorite = 0 AND deleted = 0",
                 (feed_id,),
