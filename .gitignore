@@ -12,3 +12,4 @@ DerivedData/
 .build/
 .swiftpm/
 ios/.env
+ios/build/

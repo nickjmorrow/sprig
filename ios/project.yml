@@ -1,0 +1,45 @@
+name: Bouquet
+options:
+  bundleIdPrefix: com.nicholai
+  deploymentTarget:
+    iOS: "18.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+packages:
+  BouquetCore:
+    path: BouquetCore
+targets:
+  Bouquet:
+    type: application
+    platform: iOS
+    sources:
+      - path: App
+    dependencies:
+      - package: BouquetCore
+    info:
+      path: App/Info.plist
+      properties:
+        CFBundleDisplayName: Bouquet
+        UILaunchScreen:
+          UIColorName: LaunchBackground
+        # Tailscale's tunnel is encrypted; this lets a plain-HTTP tailnet address work too, as in Forge.
+        NSAppTransportSecurity:
+          NSAllowsArbitraryLoads: true
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+    entitlements:
+      path: App/Bouquet.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.nicholai.bouquet]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.nicholai.bouquet
+        DEVELOPMENT_TEAM: ${DEVELOPMENT_TEAM}
+        PRODUCT_NAME: Bouquet
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        TARGETED_DEVICE_FAMILY: "1"
+        CODE_SIGN_STYLE: Automatic
