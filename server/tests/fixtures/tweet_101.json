@@ -1,0 +1,63 @@
+{
+ "__typename": "Tweet",
+ "lang": "en",
+ "created_at": "2026-10-24T10:01:00.000Z",
+ "display_text_range": [
+  0,
+  79
+ ],
+ "entities": {
+  "hashtags": [],
+  "urls": [],
+  "user_mentions": [],
+  "symbols": []
+ },
+ "id_str": "101",
+ "text": "1. Your eval tasks leak into the prompt through examples you forgot were there.",
+ "user": {
+  "id_str": "karpathy1",
+  "name": "Andrej Karpathy",
+  "screen_name": "karpathy",
+  "profile_image_url_https": "https://pbs.twimg.com/karpathy.jpg",
+  "is_blue_verified": false,
+  "verified": false
+ },
+ "edit_control": {},
+ "isEdited": false,
+ "isStaleEdit": false,
+ "favorite_count": 1,
+ "conversation_count": 0,
+ "news_action_type": "conversation",
+ "in_reply_to_screen_name": "karpathy",
+ "in_reply_to_status_id_str": "100",
+ "parent": {
+  "lang": "en",
+  "created_at": "2026-10-24T10:00:00.000Z",
+  "display_text_range": [
+   0,
+   79
+  ],
+  "entities": {
+   "hashtags": [],
+   "urls": [],
+   "user_mentions": [],
+   "symbols": []
+  },
+  "id_str": "100",
+  "text": "Agent evals keep lying to you, and it's mostly not the model's fault. A thread.",
+  "user": {
+   "id_str": "karpathy1",
+   "name": "Andrej Karpathy",
+   "screen_name": "karpathy",
+   "profile_image_url_https": "https://pbs.twimg.com/karpathy.jpg",
+   "is_blue_verified": false,
+   "verified": false
+  },
+  "edit_control": {},
+  "isEdited": false,
+  "isStaleEdit": false,
+  "favorite_count": 1,
+  "conversation_count": 0,
+  "news_action_type": "conversation"
+ }
+}

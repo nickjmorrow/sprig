@@ -1,0 +1,112 @@
+{
+ "__typename": "Tweet",
+ "lang": "en",
+ "created_at": "2026-10-24T10:02:00.000Z",
+ "display_text_range": [
+  0,
+  70
+ ],
+ "entities": {
+  "hashtags": [],
+  "urls": [
+   {
+    "url": "https://t.co/abc",
+    "expanded_url": "https://example.com/evals",
+    "display_url": "example.com/evals",
+    "indices": [
+     52,
+     75
+    ]
+   }
+  ],
+  "user_mentions": [],
+  "symbols": []
+ },
+ "id_str": "102",
+ "text": "2. You grade the final answer, not the path. Details: https://t.co/abc",
+ "user": {
+  "id_str": "karpathy1",
+  "name": "Andrej Karpathy",
+  "screen_name": "karpathy",
+  "profile_image_url_https": "https://pbs.twimg.com/karpathy.jpg",
+  "is_blue_verified": false,
+  "verified": false
+ },
+ "edit_control": {},
+ "isEdited": false,
+ "isStaleEdit": false,
+ "favorite_count": 1,
+ "conversation_count": 0,
+ "news_action_type": "conversation",
+ "in_reply_to_screen_name": "karpathy",
+ "in_reply_to_status_id_str": "101",
+ "parent": {
+  "lang": "en",
+  "created_at": "2026-10-24T10:01:00.000Z",
+  "display_text_range": [
+   0,
+   79
+  ],
+  "entities": {
+   "hashtags": [],
+   "urls": [],
+   "user_mentions": [],
+   "symbols": []
+  },
+  "id_str": "101",
+  "text": "1. Your eval tasks leak into the prompt through examples you forgot were there.",
+  "user": {
+   "id_str": "karpathy1",
+   "name": "Andrej Karpathy",
+   "screen_name": "karpathy",
+   "profile_image_url_https": "https://pbs.twimg.com/karpathy.jpg",
+   "is_blue_verified": false,
+   "verified": false
+  },
+  "edit_control": {},
+  "isEdited": false,
+  "isStaleEdit": false,
+  "favorite_count": 1,
+  "conversation_count": 0,
+  "news_action_type": "conversation",
+  "in_reply_to_screen_name": "karpathy",
+  "in_reply_to_status_id_str": "100"
+ },
+ "mediaDetails": [
+  {
+   "type": "photo",
+   "media_url_https": "https://pbs.twimg.com/media/chart.jpg"
+  }
+ ],
+ "quoted_tweet": {
+  "__typename": "Tweet",
+  "lang": "en",
+  "created_at": "2026-10-01T00:00:00.000Z",
+  "display_text_range": [
+   0,
+   40
+  ],
+  "entities": {
+   "hashtags": [],
+   "urls": [],
+   "user_mentions": [],
+   "symbols": []
+  },
+  "id_str": "50",
+  "text": "The original eval paper is worth a read.",
+  "user": {
+   "id_str": "else1",
+   "name": "Someone Else",
+   "screen_name": "else",
+   "profile_image_url_https": "https://pbs.twimg.com/else.jpg",
+   "is_blue_verified": false,
+   "verified": false
+  },
+  "edit_control": {},
+  "isEdited": false,
+  "isStaleEdit": false,
+  "favorite_count": 1,
+  "conversation_count": 0,
+  "news_action_type": "conversation"
+ }
+}
