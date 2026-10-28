@@ -56,6 +56,7 @@ struct SettingsView: View {
             }
             .onAppear(perform: load)
         }
+        .presentationBackground(Theme.bg)
     }
 
     private func load() {
