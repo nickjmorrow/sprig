@@ -248,6 +248,64 @@ class Store:
                 elif stale or (added and item["location"] == "inbox"):
                     self.update_item(item["id"], topics=[], tag_attempts=0)
 
+    def delete_item(self, item_id: str) -> None:
+        """Soft delete, so devices hear about it; the link is freed so it can be saved again."""
+        with self._lock:
+            item = self.get_item(item_id)
+            self.update_item(
+                item_id,
+                deleted=True,
+                deleted_at=self.now(),
+                canonical_url=f"{item['canonical_url']}#deleted:{item_id}",
+                content_html="",
+                source_html=None,
+            )
+
+    def purge_deleted(self, before: str) -> int:
+        with self._lock:
+            return self._db.execute("DELETE FROM items WHERE deleted = 1 AND deleted_at < ?", (before,)).rowcount
+
+    def stale_feed_items(self, saved_before: str) -> list[dict]:
+        with self._lock:
+            rows = self._db.execute(
+                "SELECT * FROM items WHERE location = 'feed' AND favorite = 0 AND deleted = 0 AND saved_at < ?",
+                (saved_before,),
+            ).fetchall()
+            return [self._row_to_item(row) for row in rows]
+
+    def add_feed(self, url: str, title: str, site: str) -> dict:
+        feed_id = str(uuid.uuid4())
+        with self._lock:
+            self._db.execute("INSERT INTO feeds (id, url, title, site) VALUES (?, ?, ?, ?)", (feed_id, url, title, site))
+            return self.get_feed(feed_id)
+
+    def get_feed(self, feed_id: str) -> dict | None:
+        with self._lock:
+            row = self._db.execute("SELECT * FROM feeds WHERE id = ?", (feed_id,)).fetchone()
+            return dict(row) if row else None
+
+    def find_feed(self, url: str) -> dict | None:
+        with self._lock:
+            row = self._db.execute("SELECT * FROM feeds WHERE url = ?", (url,)).fetchone()
+            return dict(row) if row else None
+
+    def update_feed(self, feed_id: str, **fields) -> dict:
+        with self._lock:
+            assignments = ", ".join(f"{name} = ?" for name in fields)
+            self._db.execute(f"UPDATE feeds SET {assignments} WHERE id = ?", (*fields.values(), feed_id))
+            return self.get_feed(feed_id)
+
+    def delete_feed(self, feed_id: str) -> None:
+        """Drops the feed and its posts he never kept or starred."""
+        with self._lock:
+            rows = self._db.execute(
+                "SELECT id FROM items WHERE feed_id = ? AND location = 'feed' AND favorite = 0 AND deleted = 0",
+                (feed_id,),
+            ).fetchall()
+            for row in rows:
+                self.delete_item(row["id"])
+            self._db.execute("DELETE FROM feeds WHERE id = ?", (feed_id,))
+
     def list_feeds(self) -> list[dict]:
         with self._lock:
             return [dict(row) for row in self._db.execute("SELECT * FROM feeds ORDER BY title")]

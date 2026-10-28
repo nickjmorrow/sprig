@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+<channel>
+<title>Example Engineering</title>
+<link>https://blog.example.com/</link>
+<description>Posts</description>
+<item>
+  <title>Full content post</title>
+  <link>https://blog.example.com/full?utm_source=rss</link>
+  <pubDate>Sat, 24 Oct 2026 09:00:00 GMT</pubDate>
+  <description>Short summary.</description>
+  <content:encoded><![CDATA[<p>Sentence number 0 about compilers and type systems. Sentence number 1 about compilers and type systems. Sentence number 2 about compilers and type systems. Sentence number 3 about compilers and type systems. Sentence number 4 about compilers and type systems. Sentence number 5 about compilers and type systems. Sentence number 6 about compilers and type systems. Sentence number 7 about compilers and type systems. Sentence number 8 about compilers and type systems. Sentence number 9 about compilers and type systems. Sentence number 10 about compilers and type systems. Sentence number 11 about compilers and type systems. Sentence number 12 about compilers and type systems. Sentence number 13 about compilers and type systems. Sentence number 14 about compilers and type systems. Sentence number 15 about compilers and type systems. Sentence number 16 about compilers and type systems. Sentence number 17 about compilers and type systems. Sentence number 18 about compilers and type systems. Sentence number 19 about compilers and type systems. Sentence number 20 about compilers and type systems. Sentence number 21 about compilers and type systems. Sentence number 22 about compilers and type systems. Sentence number 23 about compilers and type systems. Sentence number 24 about compilers and type systems. Sentence number 25 about compilers and type systems. Sentence number 26 about compilers and type systems. Sentence number 27 about compilers and type systems. Sentence number 28 about compilers and type systems. Sentence number 29 about compilers and type systems. Sentence number 30 about compilers and type systems. Sentence number 31 about compilers and type systems. Sentence number 32 about compilers and type systems. Sentence number 33 about compilers and type systems. Sentence number 34 about compilers and type systems. Sentence number 35 about compilers and type systems. Sentence number 36 about compilers and type systems. Sentence number 37 about compilers and type systems. Sentence number 38 about compilers and type systems. Sentence number 39 about compilers and type systems. Sentence number 40 about compilers and type systems. Sentence number 41 about compilers and type systems. Sentence number 42 about compilers and type systems. Sentence number 43 about compilers and type systems. Sentence number 44 about compilers and type systems. Sentence number 45 about compilers and type systems. Sentence number 46 about compilers and type systems. Sentence number 47 about compilers and type systems. Sentence number 48 about compilers and type systems. Sentence number 49 about compilers and type systems. Sentence number 50 about compilers and type systems. Sentence number 51 about compilers and type systems. Sentence number 52 about compilers and type systems. Sentence number 53 about compilers and type systems. Sentence number 54 about compilers and type systems. Sentence number 55 about compilers and type systems. Sentence number 56 about compilers and type systems. Sentence number 57 about compilers and type systems. Sentence number 58 about compilers and type systems. Sentence number 59 about compilers and type systems.</p>]]></content:encoded>
+</item>
+<item>
+  <title>Summary only post</title>
+  <link>https://blog.example.com/summary</link>
+  <pubDate>Fri, 23 Oct 2026 09:00:00 GMT</pubDate>
+  <description>Just a teaser.</description>
+</item>
+<item>
+  <title>Old post</title>
+  <link>https://blog.example.com/old</link>
+  <pubDate>Sat, 26 Sep 2026 09:00:00 GMT</pubDate>
+  <description>From last month.</description>
+</item>
+</channel>
+</rss>

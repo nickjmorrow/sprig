@@ -6,13 +6,23 @@ from datetime import UTC, datetime
 from typing import Literal
 from urllib.parse import urlsplit
 
+import httpx
 from fastapi import Depends, FastAPI, HTTPException, Request, Response
 from pydantic import BaseModel, Field, field_validator
 
+from bouquet.feeds import fetch_feed, parse_feed
 from bouquet.store import Store
 from bouquet.tagger import MAX_TOPICS, OTHER
 
 PUBLIC_FEED_FIELDS = ("id", "url", "title", "site", "last_checked", "last_error")
+
+
+def web_link(url: str) -> str:
+    url = url.strip()
+    parts = urlsplit(url)
+    if parts.scheme not in ("http", "https") or not parts.netloc:
+        raise ValueError("expected an http or https link")
+    return url
 
 
 class NewItem(BaseModel):
@@ -23,11 +33,7 @@ class NewItem(BaseModel):
     @field_validator("url")
     @classmethod
     def must_be_web_link(cls, url: str) -> str:
-        url = url.strip()
-        parts = urlsplit(url)
-        if parts.scheme not in ("http", "https") or not parts.netloc:
-            raise ValueError("expected an http or https link")
-        return url
+        return web_link(url)
 
 
 class Changes(BaseModel):
@@ -47,6 +53,15 @@ class Patch(BaseModel):
         if at.tzinfo is None:
             raise ValueError("expected a time with a timezone, e.g. 2026-10-27T10:00:00Z")
         return at
+
+
+class NewFeed(BaseModel):
+    url: str
+
+    @field_validator("url")
+    @classmethod
+    def must_be_web_link(cls, url: str) -> str:
+        return web_link(url)
 
 
 class TopicList(BaseModel):
@@ -71,8 +86,11 @@ def create_app(
     *,
     on_new_item: Callable[[], None] = lambda: None,
     on_retag: Callable[[], None] = lambda: None,
+    on_new_feed: Callable[[], None] = lambda: None,
+    http: httpx.Client | None = None,
 ) -> FastAPI:
     app = FastAPI(title="Bouquet")
+    http = http or httpx.Client()
 
     def require_token(request: Request) -> str:
         scheme, _, token = request.headers.get("authorization", "").partition(" ")
@@ -104,11 +122,13 @@ def create_app(
         response.status_code = 201
         return Store.public(item)
 
+    def public_feeds() -> list[dict]:
+        return [{key: feed[key] for key in PUBLIC_FEED_FIELDS} for feed in store.list_feeds()]
+
     @app.get("/api/changes", dependencies=authed)
     def changes(since: int = 0):
         seq, items = store.changes_since(since)
-        feeds = [{key: feed[key] for key in PUBLIC_FEED_FIELDS} for feed in store.list_feeds()]
-        return {"seq": seq, "items": items, "topics": store.topics(), "feeds": feeds}
+        return {"seq": seq, "items": items, "topics": store.topics(), "feeds": public_feeds()}
 
     @app.patch("/api/items/{item_id}", dependencies=authed)
     def patch_item(item_id: str, patch: Patch):
@@ -133,5 +153,30 @@ def create_app(
         store.set_topics(topic_list.topics)
         on_retag()
         return {"topics": store.topics()}
+
+    @app.get("/api/feeds", dependencies=authed)
+    def list_feeds():
+        return public_feeds()
+
+    @app.post("/api/feeds", dependencies=authed)
+    def add_feed(new: NewFeed, response: Response):
+        if existing := store.find_feed(new.url):
+            return {key: existing[key] for key in PUBLIC_FEED_FIELDS}
+        try:
+            title, site, _ = parse_feed(fetch_feed(new.url, http).content, new.url)
+        except httpx.HTTPError as error:
+            raise HTTPException(422, f"couldn't load {new.url}: {error}") from error
+        except Exception as error:
+            raise HTTPException(422, str(error)) from error
+        feed = store.add_feed(new.url, title, site)
+        on_new_feed()
+        response.status_code = 201
+        return {key: feed[key] for key in PUBLIC_FEED_FIELDS}
+
+    @app.delete("/api/feeds/{feed_id}", dependencies=authed, status_code=204)
+    def delete_feed(feed_id: str):
+        if store.get_feed(feed_id) is None:
+            raise HTTPException(404, "no such feed")
+        store.delete_feed(feed_id)
 
     return app

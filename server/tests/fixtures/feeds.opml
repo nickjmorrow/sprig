@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<opml version="2.0"><head><title>Reader feeds</title></head><body>
+<outline text="Example Engineering" type="rss" xmlUrl="https://blog.example.com/feed.xml"/>
+<outline text="Folder">
+  <outline text="Atom Notes" type="rss" xmlUrl="https://notes.example.org/atom"/>
+  <outline text="Broken" type="rss" xmlUrl="https://broken.example.net/rss"/>
+</outline>
+</body></opml>
