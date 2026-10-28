@@ -105,7 +105,7 @@ class Store:
 
     @staticmethod
     def now() -> str:
-        return datetime.now(UTC).isoformat(timespec="seconds")
+        return datetime.now(UTC).isoformat(timespec="milliseconds")
 
     @staticmethod
     def public(item: dict) -> dict:
@@ -209,6 +209,48 @@ class Store:
             if seq == 0:
                 items = [item for item in items if not item["deleted"]]
             return current, items
+
+    def apply_patch(self, item_id: str, changes: dict, at: str) -> dict:
+        """Apply each changed field whose time is newer than that field's last accepted change."""
+        with self._lock:
+            item = self.get_item(item_id)
+            field_times = dict(item["field_times"])
+            accepted = {}
+            for field, value in changes.items():
+                if field in field_times and field_times[field] >= at:
+                    continue
+                accepted[field] = value
+                field_times[field] = at
+            if not accepted:
+                return item
+            if "topics" in accepted:
+                accepted["topics_source"] = "you"
+                self._db.execute(
+                    "INSERT INTO corrections (item_id, title, site, before, after, at) VALUES (?, ?, ?, ?, ?, ?)",
+                    (item_id, item["title"], item["site"], json.dumps(item["topics"]), json.dumps(accepted["topics"]), at),
+                )
+            return self.update_item(item_id, field_times=field_times, **accepted)
+
+    def set_topics(self, names: list[str]) -> None:
+        """Replace the topic list. Claude's tags that used a removed topic, and inbox items when a topic
+        was added, are queued for re-tagging; tags he set himself just lose the removed names."""
+        with self._lock:
+            added = set(names) - set(self.topics())
+            self._db.execute("DELETE FROM topics")
+            self._db.executemany("INSERT INTO topics (name, position) VALUES (?, ?)", [(n, i) for i, n in enumerate(names)])
+            kept = set(names) | {"Other"}
+            rows = self._db.execute("SELECT * FROM items WHERE deleted = 0 AND topics != '[]'").fetchall()
+            for item in map(self._row_to_item, rows):
+                stale = any(topic not in kept for topic in item["topics"])
+                if item["topics_source"] == "you":
+                    if stale:
+                        self.update_item(item["id"], topics=[t for t in item["topics"] if t in kept] or ["Other"])
+                elif stale or (added and item["location"] == "inbox"):
+                    self.update_item(item["id"], topics=[], tag_attempts=0)
+
+    def list_feeds(self) -> list[dict]:
+        with self._lock:
+            return [dict(row) for row in self._db.execute("SELECT * FROM feeds ORDER BY title")]
 
     def corrections(self, limit: int = 20) -> list[dict]:
         with self._lock:
