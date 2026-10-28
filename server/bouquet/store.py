@@ -191,6 +191,16 @@ class Store:
             ).fetchone()
             return self._row_to_item(row)
 
+    def untagged(self, max_attempts: int) -> list[dict]:
+        with self._lock:
+            rows = self._db.execute(
+                """SELECT * FROM items
+                   WHERE status IN ('ready', 'web_only') AND topics = '[]' AND tag_attempts < ? AND deleted = 0
+                   ORDER BY saved_at""",
+                (max_attempts,),
+            ).fetchall()
+            return [self._row_to_item(row) for row in rows]
+
     def changes_since(self, seq: int) -> tuple[int, list[dict]]:
         with self._lock:
             current = self._db.execute("SELECT value FROM meta WHERE key = 'seq'").fetchone()[0]
@@ -199,6 +209,16 @@ class Store:
             if seq == 0:
                 items = [item for item in items if not item["deleted"]]
             return current, items
+
+    def corrections(self, limit: int = 20) -> list[dict]:
+        with self._lock:
+            rows = self._db.execute(
+                "SELECT title, site, before, after FROM corrections ORDER BY id DESC LIMIT ?", (limit,)
+            ).fetchall()
+            return [
+                {"title": row["title"], "site": row["site"], "before": json.loads(row["before"]), "after": json.loads(row["after"])}
+                for row in rows
+            ]
 
     def topics(self) -> list[str]:
         with self._lock:
