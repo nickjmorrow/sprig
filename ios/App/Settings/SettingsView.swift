@@ -12,7 +12,7 @@ struct SettingsView: View {
         NavigationStack {
             Form {
                 Section {
-                    TextField("https://<hub-host>:8453", text: $address)
+                    TextField("https://<hub-host>:8454", text: $address)
                         .keyboardType(.URL)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()

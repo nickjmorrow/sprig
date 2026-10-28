@@ -15,9 +15,9 @@ The server keeps everything in `~/bouquet-hub` (`bouquet.sqlite`, `tokens.json`;
    Log: `~/Library/Logs/bouquet.log`. `curl localhost:8792/health` → `{"ok":true}`.
 5. Put it on the tailnet (tailnet only, never Funnel):
    ```bash
-   /Applications/Tailscale.app/Contents/MacOS/Tailscale serve --bg --https=8453 http://127.0.0.1:8792
+   /Applications/Tailscale.app/Contents/MacOS/Tailscale serve --bg --https=8454 http://127.0.0.1:8792
    ```
-   The app's server address is then `https://<hub-host>:8453`.
+   The app's server address is then `https://<hub-host>:8454`.
 
 ## Moving off Reader
 
