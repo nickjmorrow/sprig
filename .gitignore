@@ -1,0 +1,11 @@
+.superpowers/
+.impeccable/
+.DS_Store
+__pycache__/
+.venv/
+*.sqlite
+*.sqlite-*
+.env
+build/
+*.xcodeproj/
+DerivedData/
