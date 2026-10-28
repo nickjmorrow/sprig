@@ -20,6 +20,7 @@ targets:
       - path: App
     dependencies:
       - package: BouquetCore
+      - target: BouquetShare
     info:
       path: App/Info.plist
       properties:
@@ -41,5 +42,37 @@ targets:
         PRODUCT_NAME: Bouquet
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        TARGETED_DEVICE_FAMILY: "1"
+        CODE_SIGN_STYLE: Automatic
+  BouquetShare:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: Share
+      - path: App/Theme.swift
+    dependencies:
+      - package: BouquetCore
+    info:
+      path: Share/Info.plist
+      properties:
+        CFBundleDisplayName: Bouquet
+        NSAppTransportSecurity:
+          NSAllowsArbitraryLoads: true
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.share-services
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).ShareViewController
+          NSExtensionAttributes:
+            NSExtensionActivationRule:
+              NSExtensionActivationSupportsWebURLWithMaxCount: 1
+              NSExtensionActivationSupportsText: true
+    entitlements:
+      path: Share/BouquetShare.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.nicholai.bouquet]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.nicholai.bouquet.share
+        DEVELOPMENT_TEAM: ${DEVELOPMENT_TEAM}
+        PRODUCT_NAME: BouquetShare
         TARGETED_DEVICE_FAMILY: "1"
         CODE_SIGN_STYLE: Automatic
