@@ -25,16 +25,19 @@ final class ShareViewController: UIViewController {
             model.state = .noLink
             return finish(after: .seconds(1.5))
         }
-        let settings = ServerSettings.load()
+        // Queue first so nothing is lost if iOS ends the extension mid-request; the server
+        // dedupes by link, so a queued copy that also got through does no harm.
+        let store = try? LocalStore.shared()
+        let queued = try? store?.enqueueShare(url: url)
         do {
-            _ = try await APIClient(settings: settings).createItem(url: url, timeout: 5)
+            _ = try await APIClient(settings: ServerSettings.load()).createItem(url: url, timeout: 5)
+            if let queued { try? store?.removeShare(queued) }
             model.state = .saved
         } catch {
             // Offline, off Tailscale or not set up yet: the app sends it on its next sync.
-            try? LocalStore.shared().enqueueShare(url: url)
-            model.state = .queued
+            model.state = queued == nil ? .failed : .queued
         }
-        finish(after: .seconds(1))
+        finish(after: .seconds(model.state == .failed ? 2.5 : 1))
     }
 
     private func finish(after delay: Duration) {
@@ -69,7 +72,7 @@ final class ShareViewController: UIViewController {
 
 @MainActor
 final class ShareModel: ObservableObject {
-    enum State { case saving, saved, queued, noLink }
+    enum State { case saving, saved, queued, noLink, failed }
     @Published var state = State.saving
 }
 
@@ -101,6 +104,7 @@ struct ShareCard: View {
         case .saved: Image(systemName: "checkmark.circle.fill").foregroundStyle(Theme.accent)
         case .queued: Image(systemName: "tray.and.arrow.down.fill").foregroundStyle(Theme.accent)
         case .noLink: Image(systemName: "link.badge.plus").foregroundStyle(Theme.dim)
+        case .failed: Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(Theme.accent)
         }
     }
 
@@ -110,6 +114,7 @@ struct ShareCard: View {
         case .saved: "Saved to Bouquet"
         case .queued: "Saved, will send\nwhen online"
         case .noLink: "No link to save"
+        case .failed: "Couldn't save.\nOpen Bouquet and try again."
         }
     }
 }

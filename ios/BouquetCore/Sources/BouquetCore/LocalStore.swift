@@ -24,9 +24,9 @@ public struct PendingShare: Codable, Sendable, FetchableRecord, MutablePersistab
 
 /// The phone's copy of everything, plus changes and shares waiting to reach the server.
 public final class LocalStore: Sendable {
-    public let db: DatabaseQueue
+    public let db: any DatabaseWriter
 
-    public init(db: DatabaseQueue) throws {
+    public init(db: any DatabaseWriter) throws {
         self.db = db
         try Self.migrator.migrate(db)
     }
@@ -40,7 +40,14 @@ public final class LocalStore: Sendable {
         guard let container = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupID) else {
             throw CocoaError(.fileNoSuchFile)
         }
-        return try LocalStore(db: DatabaseQueue(path: container.appending(path: "bouquet.sqlite").path()))
+        return try onDisk(path: container.appending(path: "bouquet.sqlite").path())
+    }
+
+    /// WAL with a busy timeout, so the app and the share extension can write the same file.
+    public static func onDisk(path: String) throws -> LocalStore {
+        var configuration = Configuration()
+        configuration.busyMode = .timeout(5)
+        return try LocalStore(db: DatabasePool(path: path, configuration: configuration))
     }
 
     private static var migrator: DatabaseMigrator {
@@ -90,8 +97,17 @@ public final class LocalStore: Sendable {
 
     // MARK: Items
 
+    /// Every column but the article body, which lists never show and which is most of the bytes.
+    private static var listColumns: [any SQLSelectable] {
+        [
+            "id", "url", "kind", "location", "status", "title", "author", "site", "publishedAt", "savedAt", "excerpt",
+            "wordCount", "minutes", "topics", "topicsSource", "favorite", "progress", "feedId", "deleted", "seq",
+        ].map { Column($0) } + [SQL("'' AS contentHtml")]
+    }
+
     static func fetchItems(_ db: Database, _ filter: ItemFilter) throws -> [Item] {
         var request = Item
+            .select(listColumns)
             .filter(Column("location") == filter.location.rawValue && Column("deleted") == false)
             .order(Column("savedAt").desc)
         if filter.favoritesOnly {
@@ -120,6 +136,13 @@ public final class LocalStore: Sendable {
 
     public func delete(ids: [String]) throws {
         try db.write { db in _ = try Item.deleteAll(db, keys: ids) }
+    }
+
+    public func replaceAll(with items: [Item]) throws {
+        try db.write { db in
+            _ = try Item.deleteAll(db)
+            for item in items { try item.insert(db) }
+        }
     }
 
     // MARK: Sync bookkeeping
@@ -166,10 +189,12 @@ public final class LocalStore: Sendable {
         _ = try db.write { try PendingPatch.deleteOne($0, key: patch.id) }
     }
 
-    public func enqueueShare(url: URL) throws {
+    @discardableResult
+    public func enqueueShare(url: URL) throws -> PendingShare {
         try db.write { db in
             var share = PendingShare(url: url.absoluteString, createdAt: Date())
             try share.insert(db)
+            return share
         }
     }
 

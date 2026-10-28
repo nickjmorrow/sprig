@@ -26,7 +26,7 @@ struct ArticleWebView: UIViewRepresentable {
               setTimeout(() => {
                 pending = false;
                 const room = document.documentElement.scrollHeight - innerHeight;
-                webkit.messageHandlers.progress.postMessage(room > 0 ? Math.min(1, scrollY / room) : 1);
+                webkit.messageHandlers.progress.postMessage(room > 0 ? Math.max(0, Math.min(1, scrollY / room)) : 1);
               }, 250);
             }, { passive: true });
             """,
@@ -81,7 +81,7 @@ struct ArticleWebView: UIViewRepresentable {
         init(onProgress: @escaping (Double) -> Void) { self.onProgress = onProgress }
 
         func userContentController(_ controller: WKUserContentController, didReceive message: WKScriptMessage) {
-            if let value = message.body as? Double { onProgress(value) }
+            if let value = message.body as? Double { onProgress(min(1, max(0, value))) }
         }
 
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {

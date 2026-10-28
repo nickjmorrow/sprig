@@ -123,12 +123,15 @@ struct ItemListView: View {
     }
 
     private func observe() async {
-        do {
-            for try await latest in engine.store.observe(filter) {
-                items = latest
+        // Keep showing the last good list if the database hiccups, and start watching again.
+        while !Task.isCancelled {
+            do {
+                for try await latest in engine.store.observe(filter) {
+                    items = latest
+                }
+            } catch {
+                try? await Task.sleep(for: .seconds(1))
             }
-        } catch {
-            items = []
         }
     }
 

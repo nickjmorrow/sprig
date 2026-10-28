@@ -29,15 +29,29 @@ public final class SyncEngine: ObservableObject {
         guard !isSyncing else { return }
         isSyncing = true
         defer { isSyncing = false }
+        // Each phase runs even if an earlier one failed, so one stuck send can't stop the pull.
+        var problems: [String] = []
+        for phase in [sendShares, sendPatches] {
+            do {
+                problems += try await phase()
+            } catch {
+                problems.append(error.localizedDescription)
+            }
+        }
         do {
-            try await sendShares()
-            try await sendPatches()
             try await pullChanges()
             lastSync = Date()
-            lastError = nil
         } catch {
-            lastError = error.localizedDescription
+            problems.append(error.localizedDescription)
         }
+        lastError = problems.first
+    }
+
+    /// The server will never accept this request as sent (bad input, unknown item): drop it rather
+    /// than retry forever. Auth, timeouts, rate limits and server errors are worth retrying.
+    static func isPermanent(_ error: Error) -> Bool {
+        guard case let APIError.http(status, _) = error else { return false }
+        return (400..<500).contains(status) && ![401, 408, 429].contains(status)
     }
 
     /// Pulls without sending first; still keeps local changes that haven't reached the server.
@@ -68,27 +82,44 @@ public final class SyncEngine: ObservableObject {
         }
     }
 
-    private func sendShares() async throws {
+    /// Returns why any were dropped; throws (keeping the rest queued) when the server can't be reached.
+    private func sendShares() async throws -> [String] {
+        var rejected: [String] = []
         for share in try store.pendingShares() {
             guard let url = URL(string: share.url) else {
                 try store.removeShare(share)
                 continue
             }
-            let item = try await api.createItem(url: url)
-            try store.upsert([item])
+            do {
+                try store.upsert([try await api.createItem(url: url)])
+            } catch where Self.isPermanent(error) {
+                rejected.append("Couldn't save \(share.url): \(error.localizedDescription)")
+            }
             try store.removeShare(share)
         }
+        return rejected
     }
 
-    private func sendPatches() async throws {
+    private func sendPatches() async throws -> [String] {
+        var rejected: [String] = []
         for patch in try store.pendingPatches() {
+            var accepted: Item?
             do {
-                _ = try await api.patch(id: patch.itemId, changes: patch.changes, at: patch.at)
-            } catch APIError.http(status: 404, _) {
-                // The item is gone on the server; the pull removes it here too.
+                accepted = try await api.patch(id: patch.itemId, changes: patch.changes, at: patch.at)
+            } catch where Self.isPermanent(error) {
+                // A 404 means the item is gone on the server; the pull removes it here too.
+                if case APIError.http(404, _) = error {} else { rejected.append(error.localizedDescription) }
             }
             try store.removePatch(patch)
+            if var item = accepted {
+                // The server's answer wins (it may have kept a newer value), except for changes still queued.
+                for later in try store.pendingPatches() where later.itemId == item.id {
+                    later.changes.apply(to: &item)
+                }
+                try store.upsert([item])
+            }
         }
+        return rejected
     }
 
     private func pullChanges() async throws {
@@ -106,8 +137,12 @@ public final class SyncEngine: ObservableObject {
             }
             live.append(item)
         }
-        try store.upsert(live)
-        try store.delete(ids: deletedIDs)
+        if changes.reset {
+            try store.replaceAll(with: live)
+        } else {
+            try store.upsert(live)
+            try store.delete(ids: deletedIDs)
+        }
         try store.setTopics(changes.topics)
         try store.setFeeds(changes.feeds)
         try store.setLastSeq(changes.seq)

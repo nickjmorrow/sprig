@@ -59,6 +59,20 @@ public struct ChangesResponse: Codable, Sendable {
     public var items: [Item]
     public var topics: [String]
     public var feeds: [Feed]
+    /// The server can't send just the changes (this device missed purged deletions, or the
+    /// server's database was restored): items is everything, and replaces what's here.
+    public var reset: Bool
+
+    enum CodingKeys: String, CodingKey { case seq, items, topics, feeds, reset }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        seq = try container.decode(Int.self, forKey: .seq)
+        items = try container.decode([Item].self, forKey: .items)
+        topics = try container.decode([String].self, forKey: .topics)
+        feeds = try container.decode([Feed].self, forKey: .feeds)
+        reset = try container.decodeIfPresent(Bool.self, forKey: .reset) ?? false
+    }
 }
 
 /// The fields of an item you can change from the phone. Only the set ones are sent.
@@ -71,14 +85,15 @@ public struct PatchChanges: Codable, Equatable, Sendable {
     public init(location: Location? = nil, favorite: Bool? = nil, progress: Double? = nil, topics: [String]? = nil) {
         self.location = location
         self.favorite = favorite
-        self.progress = progress
+        // The reader's rubber-band bounce reports slightly negative scroll positions.
+        self.progress = progress.map { min(1, max(0, $0)) }
         self.topics = topics
     }
 
     public func apply(to item: inout Item) {
         if let location { item.location = location }
         if let favorite { item.favorite = favorite }
-        if let progress { item.progress = progress }
+        if let progress { item.progress = min(1, max(0, progress)) }
         if let topics {
             item.topics = topics
             item.topicsSource = "you"
