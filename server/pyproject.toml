@@ -1,0 +1,26 @@
+[project]
+name = "bouquet"
+version = "0.1.0"
+description = "Bouquet server: saves, cleans, times and tags things to read."
+requires-python = ">=3.12"
+dependencies = [
+    "anthropic",
+    "fastapi",
+    "feedparser",
+    "httpx",
+    "trafilatura",
+    "uvicorn",
+]
+
+[project.scripts]
+bouquet = "bouquet.cli:main"
+
+[dependency-groups]
+dev = ["pytest"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
