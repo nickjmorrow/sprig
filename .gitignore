@@ -9,3 +9,6 @@ __pycache__/
 build/
 *.xcodeproj/
 DerivedData/
+.build/
+.swiftpm/
+ios/.env
