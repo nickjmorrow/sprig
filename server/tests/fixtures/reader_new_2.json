@@ -1,0 +1,17 @@
+{
+ "count": 3,
+ "nextPageCursor": null,
+ "results": [
+  {
+   "id": "r3",
+   "url": "https://read.readwise.io/new/read/r3",
+   "source_url": "https://already.example.com/saved",
+   "title": "Dup",
+   "author": null,
+   "category": "article",
+   "location": "new",
+   "saved_at": "2026-09-03T08:00:00.000000+00:00",
+   "html_content": null
+  }
+ ]
+}

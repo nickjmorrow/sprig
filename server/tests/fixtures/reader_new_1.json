@@ -1,0 +1,28 @@
+{
+ "count": 3,
+ "nextPageCursor": "cursor-2",
+ "results": [
+  {
+   "id": "r1",
+   "url": "https://read.readwise.io/new/read/r1",
+   "source_url": "https://blog.example.com/postgres",
+   "title": "Postgres internals",
+   "author": "Ada",
+   "category": "article",
+   "location": "new",
+   "saved_at": "2026-09-01T08:00:00.000000+00:00",
+   "html_content": "<article><p>Saved by Reader.</p></article>"
+  },
+  {
+   "id": "r2",
+   "url": "https://read.readwise.io/new/read/r2",
+   "source_url": "https://twitter.com/karpathy/status/102",
+   "title": "Thread",
+   "author": "karpathy",
+   "category": "tweet",
+   "location": "new",
+   "saved_at": "2026-09-02T08:00:00.000000+00:00",
+   "html_content": null
+  }
+ ]
+}

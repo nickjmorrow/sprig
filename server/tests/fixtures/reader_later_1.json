@@ -1,0 +1,28 @@
+{
+ "count": 1,
+ "nextPageCursor": null,
+ "results": [
+  {
+   "id": "r4",
+   "url": "https://read.readwise.io/later/read/r4",
+   "source_url": null,
+   "title": "Reader-only document",
+   "author": null,
+   "category": "pdf",
+   "location": "later",
+   "saved_at": "2026-09-04T08:00:00.000000+00:00",
+   "html_content": null
+  },
+  {
+   "id": "r5",
+   "url": "https://essays.example.org/long-read",
+   "source_url": "https://essays.example.org/long-read",
+   "title": "A long read",
+   "author": null,
+   "category": "article",
+   "location": "later",
+   "saved_at": "2026-09-05T08:00:00.000000+00:00",
+   "html_content": null
+  }
+ ]
+}
