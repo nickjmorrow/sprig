@@ -9,7 +9,7 @@ from bouquet.api import create_app
 from bouquet.feeds import FeedPoller
 from bouquet.pipeline import Worker
 from bouquet.store import Store
-from bouquet.tagger import Tagger
+from bouquet.tagger import make_tagger
 
 log = logging.getLogger("bouquet")
 
@@ -17,9 +17,11 @@ log = logging.getLogger("bouquet")
 def run(store: Store, tokens: dict[str, str], *, host: str, port: int) -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
     http = httpx.Client()
-    tagger = Tagger.from_env()
+    tagger = make_tagger()
     if tagger is None:
-        log.warning("ANTHROPIC_API_KEY isn't set: items won't be tagged")
+        log.warning("No ANTHROPIC_API_KEY and no Claude Code: items won't be tagged")
+    else:
+        log.info("Tagging with %s", type(tagger).__name__)
     worker = Worker(store, http, tagger)
     poller = FeedPoller(store, http, on_new_item=worker.wake)
     app = create_app(
