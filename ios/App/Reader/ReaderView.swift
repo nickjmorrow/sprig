@@ -27,6 +27,7 @@ struct ReaderView: View {
                         onFavorite: { engine.update(item, PatchChanges(favorite: !item.favorite)) },
                         onArchive: archive,
                         onEditTopics: { editingTopics = true },
+                        onMarkUnread: markUnread,
                         onRetry: { retry(item) }
                     )
                 }
@@ -90,6 +91,15 @@ struct ReaderView: View {
         guard let item else { return }
         saveProgress()
         engine.update(item, PatchChanges(location: .archive))
+        dismiss()
+    }
+
+    private func markUnread() {
+        guard let item else { return }
+        engine.update(item, PatchChanges(progress: 0))
+        // Matching both copies leaves saveProgress nothing to send when the reader closes.
+        progress = 0
+        self.item?.progress = 0
         dismiss()
     }
 

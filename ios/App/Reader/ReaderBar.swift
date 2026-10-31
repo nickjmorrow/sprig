@@ -8,6 +8,7 @@ struct ReaderBar: View {
     let onFavorite: () -> Void
     let onArchive: () -> Void
     let onEditTopics: () -> Void
+    let onMarkUnread: () -> Void
     let onRetry: () -> Void
     @Environment(\.openURL) private var openURL
 
@@ -24,6 +25,7 @@ struct ReaderBar: View {
                 button("Archive", systemImage: "archivebox", action: onArchive)
             }
             Menu {
+                Button("Mark as unread", systemImage: "circlebadge", action: onMarkUnread)
                 Button("Open original", systemImage: "safari") { openOriginal() }
                 if let url = URL(string: item.url) {
                     ShareLink(item: url) { Label("Share", systemImage: "square.and.arrow.up") }
