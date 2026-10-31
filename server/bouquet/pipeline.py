@@ -13,7 +13,7 @@ from bouquet.extract import Extracted, extract_article, site_of
 from bouquet.store import Store
 from bouquet.tagger import Tagger
 from bouquet.timing import minutes_for, word_count
-from bouquet.tweets import fetch_thread, thread_to_extracted
+from bouquet.tweets import fetch_thread, shared_link, thread_to_extracted
 from bouquet.urls import tweet_id
 
 log = logging.getLogger(__name__)
@@ -34,6 +34,13 @@ FETCH_HEADERS = {
 
 class FetchError(Exception):
     pass
+
+
+class SharesLink(Exception):
+    """The tweet only points at a page; save that page instead."""
+
+    def __init__(self, url: str):
+        self.url = url
 
 
 def html_text(content_html: str) -> str:
@@ -75,11 +82,14 @@ def load(item: dict, http: httpx.Client) -> Extracted:
     url = item["url"]
     if status_id := tweet_id(url):
         try:
-            return thread_to_extracted(fetch_thread(status_id, http))
+            thread = fetch_thread(status_id, http)
         except Exception as error:
             log.warning("tweet %s unavailable: %s", status_id, error)
             handle = urlsplit(item["canonical_url"]).path.split("/")[1]
             return link_only(url, title=item["title"] or f"Post by @{handle}", site=f"@{handle}")
+        if len(thread) == 1 and (link := shared_link(thread[0])):
+            raise SharesLink(link)
+        return thread_to_extracted(thread)
     if item["source_html"]:
         return extract_article(item["source_html"], url)
     try:
@@ -93,7 +103,13 @@ def load(item: dict, http: httpx.Client) -> Extracted:
 def process_item(store: Store, item_id: str, *, http: httpx.Client, tagger: Tagger | None) -> dict:
     item = store.get_item(item_id)
     try:
-        extracted = load(item, http)
+        try:
+            extracted = load(item, http)
+        except SharesLink as shared:
+            item = store.swap_url(item_id, shared.url)
+            if item["deleted"]:
+                return item
+            extracted = load(item, http)
     except Exception as error:
         # Anything, not just a failed fetch: an item left pending would block the queue behind it.
         log.warning("processing %s failed: %r", item_id, error)

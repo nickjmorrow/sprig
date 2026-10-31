@@ -1,0 +1,41 @@
+{
+ "__typename": "Tweet",
+ "lang": "en",
+ "created_at": "2026-10-24T11:00:00.000Z",
+ "display_text_range": [
+  0,
+  40
+ ],
+ "entities": {
+  "hashtags": [],
+  "user_mentions": [],
+  "symbols": [],
+  "urls": [
+   {
+    "url": "https://t.co/ccc",
+    "expanded_url": "https://x.com/someone/status/5",
+    "display_url": "x.com/someone/status/5",
+    "indices": [
+     0,
+     0
+    ]
+   }
+  ]
+ },
+ "id_str": "302",
+ "text": "look at this other post https://t.co/ccc",
+ "user": {
+  "id_str": "karpathy1",
+  "name": "Andrej Karpathy",
+  "screen_name": "karpathy",
+  "profile_image_url_https": "https://pbs.twimg.com/karpathy.jpg",
+  "is_blue_verified": false,
+  "verified": false
+ },
+ "edit_control": {},
+ "isEdited": false,
+ "isStaleEdit": false,
+ "favorite_count": 1,
+ "conversation_count": 0,
+ "news_action_type": "conversation"
+}

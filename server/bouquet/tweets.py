@@ -2,13 +2,17 @@
 
 import html
 import math
+from urllib.parse import urlsplit
 
 import httpx
 
 from bouquet.extract import Extracted
+from bouquet.timing import word_count
 
 SYNDICATION_URL = "https://cdn.syndication.twimg.com/tweet-result"
 MAX_THREAD = 25
+MAX_SHARE_WORDS = 40  # a tweet this short around one link is just pointing at it
+X_HOSTS = {"x.com", "twitter.com", "www.x.com", "www.twitter.com", "mobile.twitter.com", "t.co"}
 TITLE_CHARS = 80
 BASE36 = "0123456789abcdefghijklmnopqrstuvwxyz"
 
@@ -84,6 +88,18 @@ def tweet_text(tweet: dict) -> str:
         return note["text"]
     start, end = tweet.get("display_text_range") or (0, len(tweet["text"]))
     return tweet["text"][start:end]
+
+
+def shared_link(tweet: dict) -> str | None:
+    """The page a tweet exists to share: its one outside link, when there's little else to it."""
+    links = (tweet.get("entities") or {}).get("urls", [])
+    outside = {link["expanded_url"] for link in links if urlsplit(link["expanded_url"]).netloc.lower() not in X_HOSTS}
+    if len(outside) != 1:
+        return None
+    text = tweet_text(tweet)
+    for link in links:
+        text = text.replace(link["url"], "")
+    return outside.pop() if word_count(text) <= MAX_SHARE_WORDS else None
 
 
 def tweet_text_html(tweet: dict) -> str:

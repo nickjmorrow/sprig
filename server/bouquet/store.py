@@ -301,6 +301,18 @@ class Store:
             purged = self._db.execute("SELECT value FROM meta WHERE key = 'purged_seq'").fetchone()
             return seq > current or (purged is not None and seq < purged[0])
 
+    def swap_url(self, item_id: str, url: str) -> dict:
+        """Point an item at a different page (a tweet becoming the article it shared). If that page
+        is already saved, keep the saved one, back in the inbox, and drop this item."""
+        with self._transaction():
+            existing = self.find_by_canonical(url)
+            if existing and existing["id"] != item_id:
+                if existing["location"] != "inbox":
+                    self.apply_patch(existing["id"], {"location": "inbox"}, self.now())
+                self.delete_item(item_id)
+                return self.get_item(item_id)
+            return self.update_item(item_id, url=url, canonical_url=canonical_url(url), kind="article")
+
     def save_link(self, url: str, *, title: str | None = None, text: str | None = None) -> tuple[dict, bool]:
         """The item for this link, created if new; an archived or feed copy moves back to the inbox."""
         with self._transaction():
