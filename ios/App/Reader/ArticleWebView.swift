@@ -10,7 +10,7 @@ struct ArticleWebView: UIViewRepresentable {
     let initialProgress: Double
     let onProgress: (Double) -> Void
 
-    static let fontSizes = [17, 19, 21]
+    static let fontSizes = ArticlePage.fontSizes
 
     func makeCoordinator() -> Coordinator { Coordinator(onProgress: onProgress) }
 
@@ -18,18 +18,7 @@ struct ArticleWebView: UIViewRepresentable {
         let configuration = WKWebViewConfiguration()
         configuration.userContentController.add(context.coordinator, name: "progress")
         configuration.userContentController.addUserScript(WKUserScript(
-            source: """
-            let pending = false;
-            addEventListener('scroll', () => {
-              if (pending) return;
-              pending = true;
-              setTimeout(() => {
-                pending = false;
-                const room = document.documentElement.scrollHeight - innerHeight;
-                webkit.messageHandlers.progress.postMessage(room > 0 ? Math.max(0, Math.min(1, scrollY / room)) : 1);
-              }, 250);
-            }, { passive: true });
-            """,
+            source: ArticlePage.progressScript,
             injectionTime: .atDocumentEnd,
             forMainFrameOnly: true
         ))
@@ -40,7 +29,7 @@ struct ArticleWebView: UIViewRepresentable {
         webView.navigationDelegate = context.coordinator
         context.coordinator.initialProgress = initialProgress
         context.coordinator.fontSize = fontSize
-        webView.loadHTMLString(page, baseURL: URL(string: item.url))
+        webView.loadHTMLString(ArticlePage.html(for: item, fontSize: fontSize), baseURL: URL(string: item.url))
         return webView
     }
 
@@ -52,25 +41,6 @@ struct ArticleWebView: UIViewRepresentable {
 
     static func dismantleUIView(_ webView: WKWebView, coordinator: Coordinator) {
         webView.configuration.userContentController.removeScriptMessageHandler(forName: "progress")
-    }
-
-    private var page: String {
-        let stylesheet = Bundle.main.url(forResource: "reader", withExtension: "css")
-            .flatMap { try? String(contentsOf: $0, encoding: .utf8) } ?? ""
-        let kicker = ([item.displaySite] + item.topics.prefix(1)).map(escape).joined(separator: " · ")
-        let title = item.kind == .tweet ? "" : "<h1 class=\"title\">\(escape(item.displayTitle))</h1>"
-        return """
-        <!doctype html><html><head><meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <style>\(stylesheet) :root { --size: \(fontSize)px; }</style></head>
-        <body><div class="kicker">\(kicker) · <b>\(item.minutes) min</b></div>\(title)\(item.contentHtml)</body></html>
-        """
-    }
-
-    private func escape(_ text: String) -> String {
-        text.replacingOccurrences(of: "&", with: "&amp;")
-            .replacingOccurrences(of: "<", with: "&lt;")
-            .replacingOccurrences(of: ">", with: "&gt;")
     }
 
     final class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler {

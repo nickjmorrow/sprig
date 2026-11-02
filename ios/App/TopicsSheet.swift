@@ -34,7 +34,9 @@ struct TopicsSheet: View {
             }
             .background(Theme.bg)
             .navigationTitle("Topics")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
@@ -46,7 +48,11 @@ struct TopicsSheet: View {
                 }
             }
         }
+        #if os(iOS)
         .presentationDetents([.medium])
+        #else
+        .frame(minWidth: 420, minHeight: 320)
+        #endif
         .onAppear { selected = item.topics }
     }
 

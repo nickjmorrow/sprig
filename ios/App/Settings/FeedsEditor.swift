@@ -13,8 +13,10 @@ struct FeedsEditor: View {
             Section {
                 HStack {
                     TextField("Feed address", text: $newURL)
+                        #if os(iOS)
                         .keyboardType(.URL)
                         .textInputAutocapitalization(.never)
+                        #endif
                         .autocorrectionDisabled()
                         .onSubmit(add)
                     if isAdding {

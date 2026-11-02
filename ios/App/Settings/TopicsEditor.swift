@@ -40,11 +40,12 @@ struct TopicsEditor: View {
         .background(Theme.bg)
         .navigationTitle("Topics")
         .toolbar {
+            #if os(iOS)
             ToolbarItem(placement: .topBarTrailing) { EditButton() }
-            ToolbarItem(placement: .bottomBar) {
-                Button(isSaving ? "Saving…" : "Save changes", action: save)
-                    .disabled(isSaving || topics == ((try? engine.store.topics()) ?? []))
-            }
+            ToolbarItem(placement: .bottomBar) { saveButton }
+            #else
+            ToolbarItem(placement: .confirmationAction) { saveButton }
+            #endif
         }
         .alert("Rename topic", isPresented: Binding(get: { renaming != nil }, set: { if !$0 { renaming = nil } })) {
             TextField("Name", text: $renameText)
@@ -57,6 +58,11 @@ struct TopicsEditor: View {
             Button("Cancel", role: .cancel) { renaming = nil }
         }
         .onAppear { topics = (try? engine.store.topics()) ?? [] }
+    }
+
+    private var saveButton: some View {
+        Button(isSaving ? "Saving…" : "Save changes", action: save)
+            .disabled(isSaving || topics == ((try? engine.store.topics()) ?? []))
     }
 
     private func add() {
