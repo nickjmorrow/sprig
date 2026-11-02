@@ -5,6 +5,7 @@ import SwiftUI
 struct ItemListView: View {
     let location: Location
     let title: String
+    @Binding var path: [Item]
 
     @EnvironmentObject private var engine: SyncEngine
     @State private var items: [Item] = []
@@ -13,15 +14,16 @@ struct ItemListView: View {
     @State private var showingSettings = false
     @AppStorage private var savedFilter: String
 
-    init(location: Location, title: String) {
+    init(location: Location, title: String, path: Binding<[Item]>) {
         self.location = location
         self.title = title
+        _path = path
         _savedFilter = AppStorage(wrappedValue: "", "filter.\(location.rawValue)")
         _filter = State(initialValue: ItemFilter(location: location))
     }
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             List {
                 Section {
                     ForEach(items) { item in

@@ -94,8 +94,8 @@ public struct APIClient: Sendable {
         try await send("POST", "api/items", body: NewItem(url: url.absoluteString), timeout: timeout)
     }
 
-    public func patch(id: String, changes: PatchChanges, at: Date) async throws -> Item {
-        try await send("PATCH", "api/items/\(id)", body: PatchBody(changes: changes, at: at))
+    public func patch(id: String, changes: PatchChanges, at: Date, timeout: TimeInterval = 30) async throws -> Item {
+        try await send("PATCH", "api/items/\(id)", body: PatchBody(changes: changes, at: at), timeout: timeout)
     }
 
     public func retry(id: String) async throws -> Item {

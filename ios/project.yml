@@ -21,10 +21,15 @@ targets:
     dependencies:
       - package: BouquetCore
       - target: BouquetShare
+      - target: BouquetWidget
     info:
       path: App/Info.plist
       properties:
         CFBundleDisplayName: Bouquet
+        # bouquet://item/<id>: the widget's links into the reader.
+        CFBundleURLTypes:
+          - CFBundleURLName: com.nicholai.bouquet
+            CFBundleURLSchemes: [bouquet]
         UILaunchScreen:
           UIColorName: LaunchBackground
         # Tailscale's tunnel is encrypted; this lets a plain-HTTP tailnet address work too, as in Forge.
@@ -74,5 +79,31 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.nicholai.bouquet.share
         DEVELOPMENT_TEAM: ${DEVELOPMENT_TEAM}
         PRODUCT_NAME: BouquetShare
+        TARGETED_DEVICE_FAMILY: "1"
+        CODE_SIGN_STYLE: Automatic
+  BouquetWidget:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: Widget
+    dependencies:
+      - package: BouquetCore
+    info:
+      path: Widget/Info.plist
+      properties:
+        CFBundleDisplayName: Bouquet
+        NSAppTransportSecurity:
+          NSAllowsArbitraryLoads: true
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    entitlements:
+      path: Widget/BouquetWidget.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.nicholai.bouquet]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.nicholai.bouquet.widget
+        DEVELOPMENT_TEAM: ${DEVELOPMENT_TEAM}
+        PRODUCT_NAME: BouquetWidget
         TARGETED_DEVICE_FAMILY: "1"
         CODE_SIGN_STYLE: Automatic
