@@ -3,6 +3,7 @@ options:
   bundleIdPrefix: com.nicholai
   deploymentTarget:
     iOS: "18.0"
+    macOS: "15.0"
   createIntermediateGroups: true
 settings:
   base:
@@ -107,3 +108,42 @@ targets:
         PRODUCT_NAME: BouquetWidget
         TARGETED_DEVICE_FAMILY: "1"
         CODE_SIGN_STYLE: Automatic
+  BouquetMac:
+    type: application
+    platform: macOS
+    sources:
+      - path: Mac
+      - path: App/Theme.swift
+      - path: App/TopicsSheet.swift
+      - path: App/Lists/ItemRow.swift
+      - path: App/Lists/SourceBadge.swift
+      - path: App/Lists/FilterBar.swift
+      - path: App/Settings/TopicsEditor.swift
+      - path: App/Settings/FeedsEditor.swift
+      - path: App/Reader/ArticlePage.swift
+      - path: App/Reader/reader.css
+        buildPhase: resources
+    dependencies:
+      - package: BouquetCore
+    info:
+      path: Mac/Info.plist
+      properties:
+        CFBundleDisplayName: Bouquet
+        LSApplicationCategoryType: public.app-category.news
+        # Tailscale's tunnel is encrypted; this lets a plain-HTTP tailnet address work too.
+        NSAppTransportSecurity:
+          NSAllowsArbitraryLoads: true
+    entitlements:
+      path: Mac/BouquetMac.entitlements
+      properties:
+        com.apple.security.app-sandbox: true
+        com.apple.security.network.client: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.nicholai.bouquet.mac
+        DEVELOPMENT_TEAM: ${DEVELOPMENT_TEAM}
+        PRODUCT_NAME: Bouquet
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        CODE_SIGN_STYLE: Automatic
+        ENABLE_HARDENED_RUNTIME: YES
