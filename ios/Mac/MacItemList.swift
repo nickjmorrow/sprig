@@ -25,7 +25,7 @@ struct MacItemList: View {
             ForEach(items) { item in
                 ItemRow(item: item)
                     .tag(item.id)
-                    .listRowBackground(Theme.bg)
+                    .listRowBackground(selection == item.id ? Theme.control : Theme.bg)
                     .listRowSeparatorTint(Theme.line)
                     .contextMenu { menu(for: item) }
             }

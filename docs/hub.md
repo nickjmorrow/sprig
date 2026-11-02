@@ -31,3 +31,17 @@ Both write to the same database the running server uses; it processes new items 
 Bouquet reads tweets through `cdn.syndication.twimg.com/tweet-result`, the endpoint X's own embedded tweets use. It returns one tweet, plus the tweet it replies to, so Bouquet can walk **up** a thread: sharing the **last** tweet of a thread saves the whole thread (up to 25 tweets). Sharing the first tweet saves only that tweet.
 
 Spike, 2026-10-27: the only keyless source of later tweets was the embedded-timeline endpoint (`syndication.twitter.com/srv/timeline-profile/screen-name/<handle>`), and it answered `429 Too Many Requests` on the first call. Nothing else returns replies without signing in, so walking down a thread stays a known gap.
+
+## Mac app
+
+A native Mac reader (`ios/Mac`), same server and sync as the iPhone app. Build and install:
+
+```bash
+cd ios && scripts/generate-project.sh
+xcodebuild -project Bouquet.xcodeproj -scheme BouquetMac -configuration Release -destination 'platform=macOS' -derivedDataPath build/mac build
+osascript -e 'quit app "Bouquet"'; rm -rf /Applications/Bouquet.app; ditto build/mac/Build/Products/Release/Bouquet.app /Applications/Bouquet.app
+```
+
+Make it a token with `uv run bouquet token add roland` on Edgar, then **restart the server** (`launchctl kickstart -k gui/$(id -u)/com.nicholai.bouquet`): it reads `tokens.json` only at startup. Paste the token into Bouquet → Settings (⌘,).
+
+Keys: `j`/`k` next/previous, `e` archive, `s` star, `u` mark unread, `o` open original, `i` move to Inbox, ⌘+ / ⌘− text size, ⌘R sync.

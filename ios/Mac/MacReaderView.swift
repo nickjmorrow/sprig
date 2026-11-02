@@ -100,9 +100,10 @@ struct MacReaderView: View {
         progress = first.progress
         storedProgress = first.progress
         startProgress = first.progress
-        // Keep the screen current while the server finishes fetching or re-tags it.
+        // Keep the screen current while the server finishes fetching or re-tags it, and the toolbar
+        // in step with changes made from the list or the Story menu.
         while !Task.isCancelled {
-            try? await Task.sleep(for: .seconds(2))
+            try? await Task.sleep(for: .milliseconds(500))
             guard let latest = try? engine.store.item(id: itemID) else { continue }
             if latest.progress != storedProgress {
                 // Changed outside the reader (Mark as Unread): follow it rather than overwrite it.

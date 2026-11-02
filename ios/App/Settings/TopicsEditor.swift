@@ -20,6 +20,9 @@ struct TopicsEditor: View {
                         renameText = topic
                     }
                     .foregroundStyle(Theme.text)
+                    #if os(macOS)
+                    .buttonStyle(.plain)
+                    #endif
                 }
                 .onMove { topics.move(fromOffsets: $0, toOffset: $1) }
                 .onDelete { topics.remove(atOffsets: $0) }
