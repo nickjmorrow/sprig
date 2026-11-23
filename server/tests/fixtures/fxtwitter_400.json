@@ -1,0 +1,205 @@
+{
+ "code": 200,
+ "message": "OK",
+ "tweet": {
+  "id": "400",
+  "article": {
+   "id": "9001",
+   "title": "Loops all the way down",
+   "preview_text": "Every agent is a loop",
+   "cover_media": {
+    "media_info": {
+     "original_img_url": "https://pbs.twimg.com/media/cover.png"
+    }
+   },
+   "media_entities": [
+    {
+     "media_id": "77",
+     "media_info": {
+      "__typename": "ApiImage",
+      "original_img_url": "https://pbs.twimg.com/media/diagram.jpg"
+     }
+    }
+   ],
+   "content": {
+    "blocks": [
+     {
+      "data": {},
+      "key": "k",
+      "text": "🔁 Every agent is a loop, see the docs <now>.",
+      "type": "unstyled",
+      "inlineStyleRanges": [
+       {
+        "offset": 3,
+        "length": 5,
+        "style": "Bold"
+       },
+       {
+        "offset": 15,
+        "length": 6,
+        "style": "Italic"
+       }
+      ],
+      "entityRanges": [
+       {
+        "key": 0,
+        "offset": 34,
+        "length": 4
+       }
+      ]
+     },
+     {
+      "data": {},
+      "key": "k",
+      "text": "The layers",
+      "type": "header-one",
+      "inlineStyleRanges": [],
+      "entityRanges": []
+     },
+     {
+      "data": {},
+      "key": "k",
+      "text": "act",
+      "type": "unordered-list-item",
+      "inlineStyleRanges": [],
+      "entityRanges": []
+     },
+     {
+      "data": {},
+      "key": "k",
+      "text": "check",
+      "type": "unordered-list-item",
+      "inlineStyleRanges": [],
+      "entityRanges": []
+     },
+     {
+      "data": {},
+      "key": "k",
+      "text": "first",
+      "type": "ordered-list-item",
+      "inlineStyleRanges": [],
+      "entityRanges": []
+     },
+     {
+      "data": {},
+      "key": "k",
+      "text": " ",
+      "type": "atomic",
+      "inlineStyleRanges": [],
+      "entityRanges": [
+       {
+        "key": 1,
+        "offset": 0,
+        "length": 1
+       }
+      ]
+     },
+     {
+      "data": {},
+      "key": "k",
+      "text": " ",
+      "type": "atomic",
+      "inlineStyleRanges": [],
+      "entityRanges": [
+       {
+        "key": 2,
+        "offset": 0,
+        "length": 1
+       }
+      ]
+     },
+     {
+      "data": {},
+      "key": "k",
+      "text": " ",
+      "type": "atomic",
+      "inlineStyleRanges": [],
+      "entityRanges": [
+       {
+        "key": 3,
+        "offset": 0,
+        "length": 1
+       }
+      ]
+     },
+     {
+      "data": {},
+      "key": "k",
+      "text": " ",
+      "type": "atomic",
+      "inlineStyleRanges": [],
+      "entityRanges": [
+       {
+        "key": 4,
+        "offset": 0,
+        "length": 1
+       }
+      ]
+     },
+     {
+      "data": {},
+      "key": "k",
+      "text": "Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it.",
+      "type": "unstyled",
+      "inlineStyleRanges": [],
+      "entityRanges": []
+     }
+    ],
+    "entityMap": [
+     {
+      "key": "0",
+      "value": {
+       "type": "LINK",
+       "mutability": "Mutable",
+       "data": {
+        "url": "https://example.com/docs?a=1&b=2"
+       }
+      }
+     },
+     {
+      "key": "1",
+      "value": {
+       "type": "MEDIA",
+       "mutability": "Immutable",
+       "data": {
+        "mediaItems": [
+         {
+          "mediaId": "77"
+         }
+        ]
+       }
+      }
+     },
+     {
+      "key": "2",
+      "value": {
+       "type": "MARKDOWN",
+       "mutability": "Mutable",
+       "data": {
+        "markdown": "```python\nwhile True:\n    act() < check()\n```"
+       }
+      }
+     },
+     {
+      "key": "3",
+      "value": {
+       "type": "DIVIDER",
+       "mutability": "Immutable",
+       "data": {}
+      }
+     },
+     {
+      "key": "4",
+      "value": {
+       "type": "TWEET",
+       "mutability": "Immutable",
+       "data": {
+        "tweetId": "555"
+       }
+      }
+     }
+    ]
+   }
+  }
+ }
+}

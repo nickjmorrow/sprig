@@ -157,3 +157,11 @@ def test_worker_drains_pending_when_woken(store):
         time.sleep(0.05)
     worker.stop()
     assert store.get_item(item["id"])["topics"] == ["Engineering"]
+
+
+def test_refetching_keeps_topics_he_set_himself(store):
+    item = store.create_item("https://blog.example.com/mvcc", source_html=fixture_text("article.html"))
+    store.update_item(item["id"], topics=["Cooking & baking"], topics_source="you")
+    tagger = FakeTagger()
+    done = process_item(store, item["id"], http=no_network(), tagger=tagger)
+    assert done["topics"] == ["Cooking & baking"] and tagger.calls == []

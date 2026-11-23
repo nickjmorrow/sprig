@@ -13,8 +13,9 @@ from sprig.extract import Extracted, extract_article, site_of
 from sprig.store import Store
 from sprig.tagger import Tagger
 from sprig.timing import minutes_for, word_count
-from sprig.tweets import fetch_thread, shared_link, thread_to_extracted
+from sprig.tweets import article_to_extracted, fetch_thread, shared_link, thread_to_extracted
 from sprig.urls import tweet_id
+from sprig.x_articles import article_owner, fetch_article
 
 log = logging.getLogger(__name__)
 
@@ -89,6 +90,8 @@ def load(item: dict, http: httpx.Client) -> Extracted:
             return link_only(url, title=item["title"] or f"Post by @{handle}", site=f"@{handle}")
         if len(thread) == 1 and (link := shared_link(thread[0])):
             raise SharesLink(link)
+        if owner := article_owner(thread[-1]):
+            return article_to_extracted(thread, owner, fetch_article(owner["id_str"], http))
         return thread_to_extracted(thread)
     if item["source_html"]:
         return extract_article(item["source_html"], url)
@@ -131,7 +134,7 @@ def process_item(store: Store, item_id: str, *, http: httpx.Client, tagger: Tagg
         minutes=minutes_for(words),
         last_error=None,
     )
-    if tagger is None:
+    if tagger is None or item["topics_source"] == "you":  # his own topics survive a re-fetch
         return store.get_item(item_id)
     return tag_item(store, item_id, tagger)
 

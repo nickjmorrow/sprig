@@ -58,5 +58,14 @@ def test_make_tagger_falls_back_to_claude_code(monkeypatch, tmp_path):
     fake.write_text("#!/bin/sh\n")
     fake.chmod(0o755)
     monkeypatch.setenv("CLAUDE_BIN", str(fake))
+    run = FakeRun({"is_error": False, "structured_output": {"topics": ["AI"]}})
     tagger = make_tagger()
-    assert isinstance(tagger, ClaudeCodeTagger) and tagger.binary == str(fake)
+    assert isinstance(tagger, ClaudeCodeTagger)
+    tagger.run = run
+    tag(tagger)
+    # The Claude app replaces its copy on update: the next call must find the new one.
+    moved = tmp_path / "claude-new"
+    fake.rename(moved)
+    monkeypatch.setenv("CLAUDE_BIN", str(moved))
+    tag(tagger)
+    assert [cmd[0] for cmd, _ in run.calls] == [str(fake), str(moved)]

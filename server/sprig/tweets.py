@@ -8,6 +8,7 @@ import httpx
 
 from sprig.extract import Extracted
 from sprig.timing import word_count
+from sprig.x_articles import body_html, body_text, cover_html, preview_html
 
 SYNDICATION_URL = "https://cdn.syndication.twimg.com/tweet-result"
 MAX_THREAD = 25
@@ -145,5 +146,27 @@ def thread_to_extracted(thread: list[dict]) -> Extracted:
         site=f"@{author['screen_name']}",
         published_at=first.get("created_at"),
         html="".join(cards),
+        text=text,
+    )
+
+
+def article_to_extracted(thread: list[dict], owner: dict, article: dict | None) -> Extracted:
+    """A tweet that carries an X Article. A lone tweet announcing its own article becomes the
+    article; a thread or a quote keeps its cards and gets the article underneath."""
+    summary = owner["article"]
+    title = (article or summary).get("title") or "Article on X"
+    body = cover_html(article or summary) + (body_html(article) if article else preview_html(summary))
+    text = body_text(article) if article else summary.get("preview_text", "")
+    if len(thread) > 1 or owner is not thread[0]:
+        cards = thread_to_extracted(thread)
+        cards.html += f"<hr><h2>{html.escape(title)}</h2>{body}"
+        cards.text += "\n\n" + text
+        return cards
+    return Extracted(
+        title=title,
+        author=owner["user"]["name"],
+        site=f"@{owner['user']['screen_name']}",
+        published_at=owner.get("created_at"),
+        html=body,
         text=text,
     )

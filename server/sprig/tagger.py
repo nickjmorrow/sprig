@@ -71,14 +71,18 @@ def topic_schema(topics: list[str]) -> dict:
 class ClaudeCodeTagger:
     """Tags through Edgar's signed-in Claude Code (headless `claude -p`), like Hob: no API key needed."""
 
-    def __init__(self, binary: str, run=subprocess.run):
+    def __init__(self, binary: str | None = None, run=subprocess.run):
+        """Without a binary, finds Claude Code on every call: the app replaces its copy when it updates."""
         self.binary = binary
         self.run = run
 
     def tag(self, *, title: str, site: str, text: str, topics: list[str], corrections: list[dict]) -> list[str]:
         prompt = build_prompt(title=title, site=site, text=text, topics=topics, corrections=corrections)
+        binary = self.binary or claude_code_binary()
+        if not binary:
+            raise RuntimeError("Claude Code isn't installed")
         cmd = [
-            self.binary, "-p",
+            binary, "-p",
             "--output-format", "json",
             "--model", "haiku",
             "--json-schema", json.dumps(topic_schema(topics)),
@@ -116,8 +120,7 @@ def make_tagger() -> "Tagger | ClaudeCodeTagger | None":
     """The API when there's a key; otherwise Claude Code if it's installed; otherwise no tagging."""
     if api := Tagger.from_env():
         return api
-    binary = claude_code_binary()
-    return ClaudeCodeTagger(binary) if binary else None
+    return ClaudeCodeTagger() if claude_code_binary() else None
 
 
 def pick_topics(suggested: list[str], topics: list[str]) -> list[str]:
