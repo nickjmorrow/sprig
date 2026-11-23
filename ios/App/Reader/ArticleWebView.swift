@@ -1,4 +1,4 @@
-import BouquetCore
+import SprigCore
 import SwiftUI
 import WebKit
 
@@ -24,8 +24,8 @@ struct ArticleWebView: UIViewRepresentable {
         ))
         let webView = WKWebView(frame: .zero, configuration: configuration)
         webView.isOpaque = false
-        webView.backgroundColor = UIColor(Theme.bg)
-        webView.scrollView.backgroundColor = UIColor(Theme.bg)
+        webView.backgroundColor = .systemBackground
+        webView.scrollView.backgroundColor = .systemBackground
         webView.navigationDelegate = context.coordinator
         context.coordinator.initialProgress = initialProgress
         context.coordinator.fontSize = fontSize

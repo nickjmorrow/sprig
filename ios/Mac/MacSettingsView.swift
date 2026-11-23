@@ -1,4 +1,4 @@
-import BouquetCore
+import SprigCore
 import SwiftUI
 
 /// ⌘, : the server, topics and feeds.
@@ -26,13 +26,13 @@ private struct ServerTab: View {
     var body: some View {
         Form {
             Section {
-                TextField("Address", text: $address, prompt: Text("https://<hub-host>:8454"))
+                TextField("Address", text: $address, prompt: Text("https://your-server:8454"))
                     .autocorrectionDisabled()
                 SecureField("Token", text: $token)
                 TextField("Host header", text: $hostHeader, prompt: Text("optional"))
                     .autocorrectionDisabled()
             } footer: {
-                Text("Make a token on Edgar with: bouquet token add roland")
+                Text("Make a token on Edgar with: sprig token add roland")
             }
             Section {
                 Button("Sync Now") { save(); Task { await engine.sync() } }

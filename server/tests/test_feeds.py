@@ -3,8 +3,8 @@ from datetime import UTC, datetime, timedelta
 import httpx
 from fastapi.testclient import TestClient
 
-from bouquet.api import create_app
-from bouquet.feeds import parse_feed, poll_feed, prune
+from sprig.api import create_app
+from sprig.feeds import parse_feed, poll_feed, prune
 
 from conftest import fixture_bytes
 

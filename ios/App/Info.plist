@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Bouquet</string>
+	<string>Sprig</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -22,10 +22,10 @@
 	<array>
 		<dict>
 			<key>CFBundleURLName</key>
-			<string>com.nicholai.bouquet</string>
+			<string>com.nicholai.sprig</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>bouquet</string>
+				<string>sprig</string>
 			</array>
 		</dict>
 	</array>

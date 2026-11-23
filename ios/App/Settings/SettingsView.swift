@@ -1,4 +1,4 @@
-import BouquetCore
+import SprigCore
 import SwiftUI
 
 struct SettingsView: View {
@@ -12,7 +12,7 @@ struct SettingsView: View {
         NavigationStack {
             Form {
                 Section {
-                    TextField("https://<hub-host>:8454", text: $address)
+                    TextField("https://your-server:8454", text: $address)
                         .keyboardType(.URL)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
@@ -23,7 +23,7 @@ struct SettingsView: View {
                 } header: {
                     Text("Server")
                 } footer: {
-                    Text("Make a token on Edgar with: bouquet token add iphone")
+                    Text("Make a token on Edgar with: sprig token add iphone")
                 }
                 Section {
                     Button("Sync now") { save(); Task { await engine.sync() } }

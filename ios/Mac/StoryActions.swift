@@ -1,4 +1,4 @@
-import BouquetCore
+import SprigCore
 import SwiftUI
 
 typealias Action = @MainActor () -> Void

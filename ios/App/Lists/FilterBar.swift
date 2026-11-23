@@ -1,55 +1,36 @@
-import BouquetCore
+import SprigCore
 import SwiftUI
 
-/// The time picker and the topic chips above every list.
+/// The time control and the topic chips above every list.
 struct FilterBar: View {
     @Binding var filter: ItemFilter
     let topics: [String]
     var showsFavorites = false
 
     var body: some View {
-        VStack(spacing: 10) {
-            timePicker
+        VStack(alignment: .leading, spacing: 10) {
+            Picker("Reading time", selection: $filter.range) {
+                ForEach(TimeRange.allCases, id: \.self) { range in
+                    Text(range.label).tag(range)
+                }
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .padding(.horizontal, 16)
+            .sensoryFeedback(.selection, trigger: filter.range)
             chips
         }
-        .padding(.vertical, 8)
-        .background(Theme.bg)
-    }
-
-    private var timePicker: some View {
-        HStack(spacing: 2) {
-            ForEach(TimeRange.allCases, id: \.self) { range in
-                let isOn = filter.range == range
-                Button {
-                    withAnimation(.snappy(duration: 0.2)) { filter.range = range }
-                } label: {
-                    Text(range.label)
-                        .font(.system(size: 13, weight: isOn ? .semibold : .regular))
-                        .foregroundStyle(isOn ? Theme.bg : Theme.dim)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 7)
-                        .background {
-                            if isOn {
-                                RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Theme.accent)
-                            }
-                        }
-                }
-                .buttonStyle(.plain)
-            }
-        }
-        .padding(3)
-        .background(RoundedRectangle(cornerRadius: 11, style: .continuous).fill(Theme.control))
-        .padding(.horizontal, 16)
-        .sensoryFeedback(.selection, trigger: filter.range)
+        .padding(.top, 4)
+        .padding(.bottom, 10)
     }
 
     private var chips: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 7) {
+            HStack(spacing: 8) {
                 if showsFavorites {
-                    chip("★ Favorites", isOn: filter.favoritesOnly) { filter.favoritesOnly.toggle() }
+                    chip("Favorites", systemImage: "star.fill", isOn: filter.favoritesOnly) { filter.favoritesOnly.toggle() }
                 }
-                chip("All", isOn: filter.topic == nil) { filter.topic = nil }
+                chip("All topics", isOn: filter.topic == nil) { filter.topic = nil }
                 ForEach(topics, id: \.self) { topic in
                     chip(topic, isOn: filter.topic == topic) {
                         filter.topic = filter.topic == topic ? nil : topic
@@ -58,17 +39,24 @@ struct FilterBar: View {
             }
             .padding(.horizontal, 16)
         }
+        .scrollClipDisabled()
     }
 
-    private func chip(_ title: String, isOn: Bool, action: @escaping () -> Void) -> some View {
+    private func chip(_ title: String, systemImage: String? = nil, isOn: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Text(title)
-                .font(.system(size: 13, weight: isOn ? .semibold : .regular))
-                .foregroundStyle(isOn ? Theme.bg : Theme.text.opacity(0.85))
-                .padding(.horizontal, 12)
-                .padding(.vertical, 7)
-                .background(Capsule().fill(isOn ? Theme.text : Theme.control))
+            HStack(spacing: 4) {
+                if let systemImage { Image(systemName: systemImage).imageScale(.small) }
+                Text(title)
+            }
+            .font(.subheadline.weight(isOn ? .semibold : .regular))
+            .foregroundStyle(isOn ? Theme.onAccent : Theme.text)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .frame(minHeight: 32)
+            .background(Capsule().fill(isOn ? Theme.accent : Theme.control))
+            .contentShape(Capsule())
         }
         .buttonStyle(.plain)
+        .accessibilityAddTraits(isOn ? .isSelected : [])
     }
 }

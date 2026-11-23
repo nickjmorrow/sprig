@@ -13,3 +13,4 @@ DerivedData/
 .swiftpm/
 ios/.env
 ios/build/
+CLAUDE.local.md

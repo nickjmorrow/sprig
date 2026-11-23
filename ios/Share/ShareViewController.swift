@@ -1,9 +1,9 @@
-import BouquetCore
+import SprigCore
 import SwiftUI
 import UIKit
 import UniformTypeIdentifiers
 
-/// Share → Bouquet: sends the link to the server, or queues it for the app to send when it can.
+/// Share → Sprig: sends the link to the server, or queues it for the app to send when it can.
 final class ShareViewController: UIViewController {
     private let model = ShareModel()
 
@@ -111,10 +111,10 @@ struct ShareCard: View {
     private var message: String {
         switch model.state {
         case .saving: "Saving…"
-        case .saved: "Saved to Bouquet"
+        case .saved: "Saved to Sprig"
         case .queued: "Saved, will send\nwhen online"
         case .noLink: "No link to save"
-        case .failed: "Couldn't save.\nOpen Bouquet and try again."
+        case .failed: "Couldn't save.\nOpen Sprig and try again."
         }
     }
 }

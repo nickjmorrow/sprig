@@ -1,4 +1,4 @@
-import BouquetCore
+import SprigCore
 import SwiftUI
 
 /// Sidebar (Inbox, Feed, Archive), the story list, and the reader.
@@ -8,6 +8,7 @@ struct MacRootView: View {
     @State private var location: Location? = .inbox
     @State private var selectedID: Item.ID?
     @State private var items: [Item] = []
+    @State private var isSearchFocused = false
     @State private var isConfigured = ServerSettings.load(from: .standard).isConfigured
     @AppStorage("reader.fontStep") private var fontStep = 0
 
@@ -15,14 +16,14 @@ struct MacRootView: View {
         NavigationSplitView {
             sidebar
         } content: {
-            MacItemList(location: location ?? .inbox, selection: $selectedID, items: $items)
+            MacItemList(location: location ?? .inbox, selection: $selectedID, items: $items, isSearchFocused: $isSearchFocused)
                 .id(location)
                 .navigationSplitViewColumnWidth(min: 300, ideal: 360, max: 520)
         } detail: {
             detail
         }
-        .background(Theme.bg)
-        .focusedSceneValue(\.storyActions, actions)
+        // The Story menu's single-key shortcuts would otherwise fire while typing a search.
+        .focusedSceneValue(\.storyActions, isSearchFocused ? nil : actions)
         .onChange(of: location) { selectedID = nil }
         .onReceive(NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification)) { _ in
             isConfigured = ServerSettings.load(from: .standard).isConfigured
@@ -61,7 +62,7 @@ struct MacRootView: View {
             Theme.bg.ignoresSafeArea()
             if !isConfigured {
                 VStack(spacing: 12) {
-                    Text("Connect to your Bouquet server").font(.title3.weight(.semibold)).foregroundStyle(Theme.text)
+                    Text("Connect to your Sprig server").font(.title3.weight(.semibold)).foregroundStyle(Theme.text)
                     Text("Add its address and a token in Settings.").foregroundStyle(Theme.dim)
                     Button("Open Settings") { openSettings() }
                 }
@@ -69,7 +70,7 @@ struct MacRootView: View {
                 MacReaderView(itemID: selectedID)
                     .id(selectedID)
             } else {
-                Text("Pick a story").foregroundStyle(Theme.dim)
+                ContentUnavailableView("No Story Selected", systemImage: "doc.plaintext", description: Text("Pick a story from the list."))
             }
         }
     }
@@ -79,7 +80,7 @@ struct MacRootView: View {
     private var actions: StoryActions? {
         guard let item = items.first(where: { $0.id == selectedID }) else { return nil }
         let engine = engine
-        let archiveItem: Action = { engine.update(item, PatchChanges(location: .archive)) }
+        let archiveItem: Action = { engine.archive(item) }
         let inboxItem: Action = { engine.update(item, PatchChanges(location: .inbox)) }
         let archive: Action? = item.location == .archive ? nil : archiveItem
         let moveToInbox: Action? = item.location == .inbox ? nil : inboxItem
@@ -120,7 +121,7 @@ private struct SidebarRow: View {
         while !Task.isCancelled {
             do {
                 for try await items in engine.store.observe(ItemFilter(location: location)) {
-                    count = items.filter { $0.progress < 0.98 }.count
+                    count = items.filter { !$0.isFinished }.count
                 }
             } catch {
                 try? await Task.sleep(for: .seconds(1))

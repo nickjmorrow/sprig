@@ -1,4 +1,4 @@
-import BouquetCore
+import SprigCore
 import SwiftUI
 import WebKit
 
@@ -10,7 +10,11 @@ struct MacArticleWebView: NSViewRepresentable {
     let initialProgress: Double
     let onProgress: (Double) -> Void
 
-    private static let extraCSS = "body { padding-top: 36px; }"
+    /// The page draws no background, so the window color (not pure black) shows in dark mode.
+    private static let extraCSS = """
+        html, body { background: transparent; } body { padding-top: 36px; }
+        @media (prefers-color-scheme: dark) { :root { --card: rgba(255,255,255,0.07); } }
+        """
 
     func makeCoordinator() -> Coordinator { Coordinator(onProgress: onProgress) }
 
@@ -24,7 +28,7 @@ struct MacArticleWebView: NSViewRepresentable {
         ))
         let webView = WKWebView(frame: .zero, configuration: configuration)
         webView.setValue(false, forKey: "drawsBackground")
-        webView.underPageBackgroundColor = NSColor(Theme.bg)
+        webView.underPageBackgroundColor = .clear
         webView.navigationDelegate = context.coordinator
         context.coordinator.initialProgress = initialProgress
         context.coordinator.fontSize = fontSize

@@ -1,4 +1,4 @@
-name: Bouquet
+name: Sprig
 options:
   bundleIdPrefix: com.nicholai
   deploymentTarget:
@@ -11,26 +11,26 @@ settings:
     MARKETING_VERSION: "0.1.0"
     CURRENT_PROJECT_VERSION: "1"
 packages:
-  BouquetCore:
-    path: BouquetCore
+  SprigCore:
+    path: SprigCore
 targets:
-  Bouquet:
+  Sprig:
     type: application
     platform: iOS
     sources:
       - path: App
     dependencies:
-      - package: BouquetCore
-      - target: BouquetShare
-      - target: BouquetWidget
+      - package: SprigCore
+      - target: SprigShare
+      - target: SprigWidget
     info:
       path: App/Info.plist
       properties:
-        CFBundleDisplayName: Bouquet
-        # bouquet://item/<id>: the widget's links into the reader.
+        CFBundleDisplayName: Sprig
+        # sprig://item/<id>: the widget's links into the reader.
         CFBundleURLTypes:
-          - CFBundleURLName: com.nicholai.bouquet
-            CFBundleURLSchemes: [bouquet]
+          - CFBundleURLName: com.nicholai.sprig
+            CFBundleURLSchemes: [sprig]
         UILaunchScreen:
           UIColorName: LaunchBackground
         # Tailscale's tunnel is encrypted; this lets a plain-HTTP tailnet address work too, as in Forge.
@@ -38,30 +38,30 @@ targets:
           NSAllowsArbitraryLoads: true
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
     entitlements:
-      path: App/Bouquet.entitlements
+      path: App/Sprig.entitlements
       properties:
-        com.apple.security.application-groups: [group.com.nicholai.bouquet]
+        com.apple.security.application-groups: [group.com.nicholai.sprig]
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.nicholai.bouquet
+        PRODUCT_BUNDLE_IDENTIFIER: com.nicholai.sprig
         DEVELOPMENT_TEAM: ${DEVELOPMENT_TEAM}
-        PRODUCT_NAME: Bouquet
+        PRODUCT_NAME: Sprig
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         TARGETED_DEVICE_FAMILY: "1"
         CODE_SIGN_STYLE: Automatic
-  BouquetShare:
+  SprigShare:
     type: app-extension
     platform: iOS
     sources:
       - path: Share
       - path: App/Theme.swift
     dependencies:
-      - package: BouquetCore
+      - package: SprigCore
     info:
       path: Share/Info.plist
       properties:
-        CFBundleDisplayName: Bouquet
+        CFBundleDisplayName: Sprig
         NSAppTransportSecurity:
           NSAllowsArbitraryLoads: true
         NSExtension:
@@ -72,43 +72,43 @@ targets:
               NSExtensionActivationSupportsWebURLWithMaxCount: 1
               NSExtensionActivationSupportsText: true
     entitlements:
-      path: Share/BouquetShare.entitlements
+      path: Share/SprigShare.entitlements
       properties:
-        com.apple.security.application-groups: [group.com.nicholai.bouquet]
+        com.apple.security.application-groups: [group.com.nicholai.sprig]
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.nicholai.bouquet.share
+        PRODUCT_BUNDLE_IDENTIFIER: com.nicholai.sprig.share
         DEVELOPMENT_TEAM: ${DEVELOPMENT_TEAM}
-        PRODUCT_NAME: BouquetShare
+        PRODUCT_NAME: SprigShare
         TARGETED_DEVICE_FAMILY: "1"
         CODE_SIGN_STYLE: Automatic
-  BouquetWidget:
+  SprigWidget:
     type: app-extension
     platform: iOS
     sources:
       - path: Widget
     dependencies:
-      - package: BouquetCore
+      - package: SprigCore
     info:
       path: Widget/Info.plist
       properties:
-        CFBundleDisplayName: Bouquet
+        CFBundleDisplayName: Sprig
         NSAppTransportSecurity:
           NSAllowsArbitraryLoads: true
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
     entitlements:
-      path: Widget/BouquetWidget.entitlements
+      path: Widget/SprigWidget.entitlements
       properties:
-        com.apple.security.application-groups: [group.com.nicholai.bouquet]
+        com.apple.security.application-groups: [group.com.nicholai.sprig]
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.nicholai.bouquet.widget
+        PRODUCT_BUNDLE_IDENTIFIER: com.nicholai.sprig.widget
         DEVELOPMENT_TEAM: ${DEVELOPMENT_TEAM}
-        PRODUCT_NAME: BouquetWidget
+        PRODUCT_NAME: SprigWidget
         TARGETED_DEVICE_FAMILY: "1"
         CODE_SIGN_STYLE: Automatic
-  BouquetMac:
+  SprigMac:
     type: application
     platform: macOS
     sources:
@@ -118,31 +118,32 @@ targets:
       - path: App/Lists/ItemRow.swift
       - path: App/Lists/SourceBadge.swift
       - path: App/Lists/FilterBar.swift
+      - path: App/Lists/UndoArchiveBar.swift
       - path: App/Settings/TopicsEditor.swift
       - path: App/Settings/FeedsEditor.swift
       - path: App/Reader/ArticlePage.swift
       - path: App/Reader/reader.css
         buildPhase: resources
     dependencies:
-      - package: BouquetCore
+      - package: SprigCore
     info:
       path: Mac/Info.plist
       properties:
-        CFBundleDisplayName: Bouquet
+        CFBundleDisplayName: Sprig
         LSApplicationCategoryType: public.app-category.news
         # Tailscale's tunnel is encrypted; this lets a plain-HTTP tailnet address work too.
         NSAppTransportSecurity:
           NSAllowsArbitraryLoads: true
     entitlements:
-      path: Mac/BouquetMac.entitlements
+      path: Mac/SprigMac.entitlements
       properties:
         com.apple.security.app-sandbox: true
         com.apple.security.network.client: true
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.nicholai.bouquet.mac
+        PRODUCT_BUNDLE_IDENTIFIER: com.nicholai.sprig.mac
         DEVELOPMENT_TEAM: ${DEVELOPMENT_TEAM}
-        PRODUCT_NAME: Bouquet
+        PRODUCT_NAME: Sprig
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         CODE_SIGN_STYLE: Automatic

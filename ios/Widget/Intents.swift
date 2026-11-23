@@ -1,5 +1,5 @@
 import AppIntents
-import BouquetCore
+import SprigCore
 import Foundation
 import WidgetKit
 

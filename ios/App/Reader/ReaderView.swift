@@ -1,4 +1,4 @@
-import BouquetCore
+import SprigCore
 import SwiftUI
 
 struct ReaderView: View {
@@ -8,39 +8,41 @@ struct ReaderView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
     @AppStorage("reader.fontStep") private var fontStep = 0
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var item: Item?
     @State private var progress = 0.0
     @State private var startProgress = 0.0
     @State private var editingTopics = false
 
     var body: some View {
-        ZStack(alignment: .top) {
-            Theme.bg.ignoresSafeArea()
+        Group {
             if let item {
                 content(item)
-                progressBar
-                VStack {
-                    Spacer()
-                    ReaderBar(
-                        item: item,
-                        onFontSize: { fontStep = (fontStep + 1) % ArticleWebView.fontSizes.count },
-                        onFavorite: { engine.update(item, PatchChanges(favorite: !item.favorite)) },
-                        onArchive: archive,
-                        onEditTopics: { editingTopics = true },
-                        onMarkUnread: markUnread,
-                        onRetry: { retry(item) }
-                    )
-                }
+                    .overlay(alignment: .top) { progressBar }
+            } else {
+                Color.clear
             }
         }
         .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(Theme.bg, for: .navigationBar)
         .toolbar(.hidden, for: .tabBar)
+        .toolbar {
+            if let item {
+                ReaderBar(
+                    item: item,
+                    fontStep: $fontStep,
+                    onFavorite: { engine.update(item, PatchChanges(favorite: !item.favorite)) },
+                    onArchive: archive,
+                    onEditTopics: { editingTopics = true },
+                    onMarkUnread: markUnread,
+                    onRetry: { retry(item) }
+                )
+            }
+        }
         .sheet(isPresented: $editingTopics) {
             if let item { TopicsSheet(item: item) }
         }
         .task { await observe() }
-        .onDisappear(perform: saveProgress)
+        .onDisappear(perform: leave)
     }
 
     @ViewBuilder
@@ -48,14 +50,20 @@ struct ReaderView: View {
         if item.status == .ready, !item.contentHtml.isEmpty {
             ArticleWebView(
                 item: item,
-                fontSize: ArticleWebView.fontSizes[fontStep % ArticleWebView.fontSizes.count],
+                fontSize: articleFontSize,
                 initialProgress: startProgress,
                 onProgress: { progress = $0 }
             )
-            .ignoresSafeArea(edges: .bottom)
         } else {
             LinkOnlyView(item: item, onRetry: { retry(item) })
         }
+    }
+
+    /// The chosen step scaled by the system text size, so Larger Text reaches the article too.
+    private var articleFontSize: Int {
+        _ = dynamicTypeSize
+        let step = ArticlePage.fontSizes[min(max(fontStep, 0), ArticlePage.fontSizes.count - 1)]
+        return Int(UIFontMetrics(forTextStyle: .body).scaledValue(for: CGFloat(step)).rounded())
     }
 
     private var progressBar: some View {
@@ -66,6 +74,7 @@ struct ReaderView: View {
                 .animation(.linear(duration: 0.2), value: progress)
         }
         .frame(height: 2)
+        .accessibilityHidden(true)
     }
 
     private func observe() async {
@@ -82,6 +91,17 @@ struct ReaderView: View {
         }
     }
 
+    /// Going back after reading to the end archives the story; the list offers Undo.
+    private func leave() {
+        if let item, Item.readToEnd(from: startProgress, to: progress, in: item.location),
+           (try? engine.store.item(id: item.id))?.location == item.location {
+            self.item?.progress = progress
+            engine.archive(item, progress: progress, automatically: true)
+        } else {
+            saveProgress()
+        }
+    }
+
     private func saveProgress() {
         guard let item, abs(progress - item.progress) > 0.01 else { return }
         engine.update(item, PatchChanges(progress: progress))
@@ -89,8 +109,10 @@ struct ReaderView: View {
 
     private func archive() {
         guard let item else { return }
-        saveProgress()
-        engine.update(item, PatchChanges(location: .archive))
+        engine.archive(item, progress: abs(progress - item.progress) > 0.01 ? progress : nil)
+        // Leaving is now just leaving: the story is already archived.
+        self.item?.location = .archive
+        self.item?.progress = progress
         dismiss()
     }
 
@@ -113,7 +135,7 @@ struct ReaderView: View {
     }
 }
 
-/// Pages Bouquet couldn't read itself: paywalls, PDFs, failed fetches.
+/// Pages Sprig couldn't read itself: paywalls, PDFs, failed fetches.
 private struct LinkOnlyView: View {
     let item: Item
     let onRetry: () -> Void
@@ -123,21 +145,19 @@ private struct LinkOnlyView: View {
         VStack(alignment: .leading, spacing: 14) {
             Text(item.displaySite).font(.footnote.weight(.semibold)).foregroundStyle(Theme.dim)
             Text(item.displayTitle)
-                .font(.system(size: 26, weight: .bold, design: .serif))
+                .font(.system(.title, design: .serif, weight: .bold))
                 .foregroundStyle(Theme.text)
             Text(message).font(.callout).foregroundStyle(Theme.dim)
             if item.status == .pending {
-                ProgressView().tint(Theme.dim)
+                ProgressView()
             } else {
                 Button { if let url = URL(string: item.url) { openURL(url) } } label: {
-                    Label(item.kind == .tweet ? "Open in X" : "Read on the web", systemImage: "safari")
-                        .font(.body.weight(.semibold))
-                        .foregroundStyle(Theme.bg)
-                        .padding(.horizontal, 18).padding(.vertical, 11)
-                        .background(Capsule().fill(Theme.accent))
+                    Label(item.kind == .tweet ? "Open in X" : "Read on the Web", systemImage: "safari")
                 }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.large)
                 if item.status == .failed {
-                    Button("Try again", action: onRetry).foregroundStyle(Theme.accent)
+                    Button("Try Again", action: onRetry)
                 }
             }
             Spacer()
@@ -149,7 +169,7 @@ private struct LinkOnlyView: View {
     private var message: String {
         switch item.status {
         case .pending: "Fetching…"
-        case .failed: "Bouquet couldn't fetch this page."
+        case .failed: "Sprig couldn't fetch this page."
         case .ready, .webOnly: "This one reads best on the web."
         }
     }

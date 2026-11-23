@@ -3,8 +3,8 @@ import json
 import httpx
 import pytest
 
-from bouquet.pipeline import process_item, retag_untagged
-from bouquet.timing import minutes_for, word_count
+from sprig.pipeline import process_item, retag_untagged
+from sprig.timing import minutes_for, word_count
 
 from conftest import FIXTURES, fixture_text
 
@@ -146,7 +146,7 @@ def test_unfetchable_urls_fail_cleanly(store, bad):
 def test_worker_drains_pending_when_woken(store):
     import time
 
-    from bouquet.pipeline import Worker
+    from sprig.pipeline import Worker
 
     worker = Worker(store, no_network(), FakeTagger())
     worker.start()

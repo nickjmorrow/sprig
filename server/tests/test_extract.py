@@ -1,5 +1,5 @@
-from bouquet.extract import clean_html, extract_article
-from bouquet.timing import word_count
+from sprig.extract import clean_html, extract_article
+from sprig.timing import word_count
 
 from conftest import fixture_text
 

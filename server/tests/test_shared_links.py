@@ -4,8 +4,8 @@ import json
 
 import httpx
 
-from bouquet.pipeline import process_item
-from bouquet.tweets import shared_link
+from sprig.pipeline import process_item
+from sprig.tweets import shared_link
 
 from conftest import FIXTURES, fixture_text
 

@@ -1,4 +1,4 @@
-import BouquetCore
+import SprigCore
 import SwiftUI
 
 /// Pick 1–3 topics for an item. Your picks also teach the tagger.
@@ -21,7 +21,7 @@ struct TopicsSheet: View {
                         } label: {
                             Text(topic)
                                 .font(.system(size: 15, weight: isOn ? .semibold : .regular))
-                                .foregroundStyle(isOn ? Theme.bg : Theme.text)
+                                .foregroundStyle(isOn ? Theme.onAccent : Theme.text)
                                 .padding(.horizontal, 14).padding(.vertical, 9)
                                 .background(Capsule().fill(isOn ? Theme.accent : Theme.control))
                         }

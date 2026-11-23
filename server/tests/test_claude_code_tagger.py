@@ -3,7 +3,7 @@ import subprocess
 
 import pytest
 
-from bouquet.tagger import ClaudeCodeTagger, make_tagger
+from sprig.tagger import ClaudeCodeTagger, make_tagger
 
 TOPICS = ["AI", "Engineering", "Cooking & baking"]
 

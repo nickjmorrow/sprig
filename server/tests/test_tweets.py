@@ -2,7 +2,7 @@ import json
 
 import httpx
 
-from bouquet.tweets import fetch_thread, syndication_token, thread_to_extracted
+from sprig.tweets import fetch_thread, syndication_token, thread_to_extracted
 
 from conftest import FIXTURES
 

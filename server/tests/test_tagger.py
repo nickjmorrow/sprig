@@ -3,7 +3,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from bouquet.tagger import MAX_WORDS, Tagger, build_prompt
+from sprig.tagger import MAX_WORDS, Tagger, build_prompt
 
 TOPICS = ["AI", "Engineering", "Cooking & baking"]
 

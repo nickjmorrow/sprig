@@ -1,4 +1,4 @@
-import BouquetCore
+import SprigCore
 import SwiftUI
 
 /// The right column: one story, with its actions in the window toolbar. The caller sets `.id(itemID)`,
@@ -29,7 +29,7 @@ struct MacReaderView: View {
             if let item { TopicsSheet(item: item) }
         }
         .task { await observe() }
-        .onDisappear(perform: saveProgress)
+        .onDisappear(perform: leave)
         .onChange(of: scenePhase) { if scenePhase != .active { saveProgress() } }
     }
 
@@ -72,7 +72,7 @@ struct MacReaderView: View {
                 engine.update(item, PatchChanges(favorite: !item.favorite))
             }
             if item.location != .archive {
-                Button("Archive", systemImage: "archivebox") { engine.update(item, PatchChanges(location: .archive)) }
+                Button("Archive", systemImage: "archivebox") { engine.archive(item) }
             }
             Button(item.kind == .tweet ? "Open in X" : "Open Original", systemImage: "safari", action: openOriginal)
             Menu {
@@ -114,6 +114,17 @@ struct MacReaderView: View {
         }
     }
 
+    /// Moving to another story after reading this one to the end archives it (Undo is offered).
+    private func leave() {
+        if let item, Item.readToEnd(from: startProgress, to: progress, in: item.location),
+           (try? engine.store.item(id: item.id))?.location == item.location {
+            storedProgress = progress
+            engine.archive(item, progress: progress, automatically: true)
+        } else {
+            saveProgress()
+        }
+    }
+
     private func saveProgress() {
         guard let item, abs(progress - storedProgress) > 0.01 else { return }
         storedProgress = progress
@@ -130,7 +141,7 @@ struct MacReaderView: View {
     }
 }
 
-/// Pages Bouquet couldn't read itself: paywalls, PDFs, failed fetches.
+/// Pages Sprig couldn't read itself: paywalls, PDFs, failed fetches.
 private struct LinkOnlyView: View {
     let item: Item
     let onRetry: () -> Void
@@ -139,22 +150,19 @@ private struct LinkOnlyView: View {
         VStack(alignment: .leading, spacing: 14) {
             Text(item.displaySite).font(.footnote.weight(.semibold)).foregroundStyle(Theme.dim)
             Text(item.displayTitle)
-                .font(.system(size: 26, weight: .bold, design: .serif))
+                .font(.system(.title, design: .serif, weight: .bold))
                 .foregroundStyle(Theme.text)
             Text(message).font(.callout).foregroundStyle(Theme.dim)
             if item.status == .pending {
                 ProgressView().controlSize(.small)
             } else {
                 Button { if let url = URL(string: item.url) { NSWorkspace.shared.open(url) } } label: {
-                    Label(item.kind == .tweet ? "Open in X" : "Read on the web", systemImage: "safari")
-                        .font(.body.weight(.semibold))
-                        .foregroundStyle(Theme.bg)
-                        .padding(.horizontal, 18).padding(.vertical, 11)
-                        .background(Capsule().fill(Theme.accent))
+                    Label(item.kind == .tweet ? "Open in X" : "Read on the Web", systemImage: "safari")
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.borderedProminent)
+                .controlSize(.large)
                 if item.status == .failed {
-                    Button("Try Again", action: onRetry).foregroundStyle(Theme.accent)
+                    Button("Try Again", action: onRetry)
                 }
             }
             Spacer()
@@ -167,7 +175,7 @@ private struct LinkOnlyView: View {
     private var message: String {
         switch item.status {
         case .pending: "Fetching…"
-        case .failed: "Bouquet couldn't fetch this page."
+        case .failed: "Sprig couldn't fetch this page."
         case .ready, .webOnly: "This one reads best on the web."
         }
     }

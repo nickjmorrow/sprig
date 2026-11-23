@@ -1,33 +1,39 @@
-import BouquetCore
+import SprigCore
 import SwiftUI
 import WidgetKit
 
-/// Home-screen widget: what you were reading, then a few random unread picks, each with a
-/// button to mark it done.
+/// Home-screen widget: what you were reading, then a few random unread picks. Tapping a row
+/// opens it in the app's reader.
 @main
 struct UpNextWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: "UpNext", provider: PicksProvider()) { entry in
             PicksView(picks: entry.picks)
-                .containerBackground(Marigold.ink, for: .widget)
+                .containerBackground(for: .widget) { Plate.ink }
         }
         .configurationDisplayName("Up next")
         .description("Pick up where you left off, or try something new.")
         .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
+        .contentMarginsDisabled()
     }
 }
 
-/// The Marigold Tarot widget's palette (~/Projects/tarot/app/Shared/Theme.swift): black card
-/// stock, gold foil, warm white ink.
-private enum Marigold {
-    static let gold = Color(red: 194 / 255, green: 164 / 255, blue: 83 / 255)
-    static let ink = Color(red: 11 / 255, green: 10 / 255, blue: 8 / 255)
-    static let text = Color(red: 242 / 255, green: 237 / 255, blue: 227 / 255)
-    static let muted = text.opacity(0.62)
+/// The "engraved plate" home-screen theme, in the app icon's colors: its deep teal tile, a sage
+/// frame, brass hairlines, a vermilion pip, bone and muted serif text.
+private enum Plate {
+    static let ink = Color(red: 0x0F / 255, green: 0x23 / 255, blue: 0x21 / 255)
+    static let brass = Color(red: 0xC9 / 255, green: 0xA8 / 255, blue: 0x5C / 255)
+    static let sage = Color(red: 0x6A / 255, green: 0xA8 / 255, blue: 0x9A / 255)
+    static let vermilion = Color(red: 0xCF / 255, green: 0x6F / 255, blue: 0x45 / 255)
+    static let bone = Color(red: 0xE8 / 255, green: 0xDC / 255, blue: 0xC0 / 255)
+    static let muted = Color(red: 0x8D / 255, green: 0x8A / 255, blue: 0x80 / 255)
 
-    static func serif(_ size: CGFloat, bold: Bool = false) -> Font {
-        .custom(bold ? "Baskerville-SemiBold" : "Baskerville", size: size)
-    }
+    static func title(_ size: CGFloat) -> Font { .system(size: size, weight: .semibold, design: .serif) }
+    static let meta = Font.system(size: 11, design: .serif).italic()
+    static let eyebrow = Font.system(size: 8.5, weight: .semibold)
+
+    /// Where text starts: 23pt inside the inset frame line.
+    static let textInset: CGFloat = 30
 }
 
 struct PicksEntry: TimelineEntry {
@@ -62,19 +68,15 @@ struct PicksView: View {
     @Environment(\.widgetFamily) private var family
 
     var body: some View {
-        if picks.continueReading.isEmpty && picks.suggestions.isEmpty {
-            empty
-        } else if family == .systemSmall {
-            small
-        } else {
-            list(picks.limited(to: family == .systemLarge ? 8 : 3))
-        }
-    }
-
-    private var empty: some View {
-        VStack(spacing: 6) {
-            Image(systemName: "sparkles").font(.system(size: 22)).foregroundStyle(Marigold.gold)
-            Text("Inbox is clear").font(Marigold.serif(15)).foregroundStyle(Marigold.muted)
+        ZStack {
+            PlateFrame()
+            if picks.continueReading.isEmpty && picks.suggestions.isEmpty {
+                Text("Inbox is clear").font(Plate.meta).foregroundStyle(Plate.muted)
+            } else if family == .systemSmall {
+                small
+            } else {
+                list(picks.limited(to: family == .systemLarge ? 8 : 3))
+            }
         }
     }
 
@@ -83,114 +85,167 @@ struct PicksView: View {
         let isStarted = !picks.continueReading.isEmpty
         if let item = picks.continueReading.first ?? picks.suggestions.first {
             VStack(alignment: .leading, spacing: 6) {
-                HStack(alignment: .top) {
-                    Text(isStarted ? "CONTINUE" : "TRY THIS")
-                        .font(.system(size: 9, weight: .semibold))
-                        .kerning(0.6)
-                        .foregroundStyle(Marigold.gold.opacity(0.8))
-                    Spacer()
-                    DoneButton(itemID: item.id)
-                }
+                Text(isStarted ? "CONTINUE" : "TRY THIS")
+                    .font(Plate.eyebrow)
+                    .tracking(1.8)
+                    .foregroundStyle(Plate.brass)
                 Text(item.displayTitle)
-                    .font(Marigold.serif(17, bold: true))
-                    .foregroundStyle(isStarted ? Marigold.gold : Marigold.text)
+                    .font(Plate.title(16))
+                    .foregroundStyle(isStarted ? Plate.brass : Plate.bone)
                     .lineLimit(3)
                 Spacer(minLength: 0)
-                // No room for the site beside "16 min left" at this size.
-                MetaLine(item: item, showsSite: false)
-                if isStarted { ProgressLine(progress: item.progress) }
+                MetaLine(item: item, showsSource: false)
+                if isStarted { ProgressRule(progress: item.progress) }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .padding(.horizontal, 22)
+            .padding(.vertical, 22)
             .widgetURL(item.link)
         }
     }
 
-    /// One list, no headings: started items sit on top in gold, suggestions follow in white.
+    /// One list, no headings, on an even rhythm: the first row in brass, the rest in bone, with
+    /// a brass rule between rows.
     private func list(_ shown: WidgetPicks) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            ForEach(shown.continueReading) { PickRow(item: $0, isStarted: true) }
-            ForEach(shown.suggestions) { PickRow(item: $0, isStarted: false) }
-            Spacer(minLength: 0)
+        let rows = shown.continueReading + shown.suggestions
+        let slots = family == .systemLarge ? 8 : 3
+        return VStack(spacing: 0) {
+            ForEach(Array(rows.enumerated()), id: \.element.id) { index, item in
+                if index > 0 { RowRule() }
+                PickRow(item: item, isFirst: index == 0)
+                    .frame(maxHeight: .infinity)
+            }
+            // Keep the rhythm when there are fewer items than rows.
+            ForEach(rows.count..<max(rows.count, slots), id: \.self) { _ in
+                Color.clear.frame(maxHeight: .infinity)
+            }
         }
+        .padding(.horizontal, Plate.textInset)
+        .padding(.top, 20)
+        .padding(.bottom, 21)
     }
 }
 
 private struct PickRow: View {
     let item: Item
-    let isStarted: Bool
+    let isFirst: Bool
 
     var body: some View {
-        HStack(spacing: 10) {
-            Link(destination: item.link) {
-                VStack(alignment: .leading, spacing: 1) {
-                    Text(item.displayTitle)
-                        .font(Marigold.serif(15.5, bold: true))
-                        .foregroundStyle(isStarted ? Marigold.gold : Marigold.text)
-                        .lineLimit(1)
-                    MetaLine(item: item)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
+        Link(destination: item.link) {
+            VStack(alignment: .leading, spacing: 1) {
+                Text(item.displayTitle)
+                    .font(Plate.title(15))
+                    .foregroundStyle(isFirst ? Plate.brass : Plate.bone)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                MetaLine(item: item)
             }
-            DoneButton(itemID: item.id)
+            // Sits a touch below center, closer to the rule under it, as in the mockup.
+            .padding(.top, 3)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
         }
     }
 }
 
-/// "site · 7 min left" for started items, "site · 12 min" for the rest.
+/// "@handle · 7 min left" or "author · 12 min"; "Read" once it's finished.
 private struct MetaLine: View {
     let item: Item
-    var showsSite = true
+    var showsSource = true
 
     var body: some View {
-        HStack(spacing: 4) {
-            if showsSite {
-                Text(item.displaySite).lineLimit(1)
-                Text("·")
-            }
-            Text(time).foregroundStyle(Marigold.gold).fixedSize()
-        }
-        .font(.system(size: 11).italic())
-        .foregroundStyle(Marigold.muted)
+        Text(showsSource ? "\(source) · \(time)" : time)
+            .font(Plate.meta)
+            .foregroundStyle(Plate.muted)
+            .lineLimit(1)
+            .truncationMode(.middle)
+    }
+
+    /// Tweets carry the handle as their site; articles show the author when there is one.
+    private var source: String {
+        if let site = item.site, site.hasPrefix("@") { return site }
+        return item.author ?? item.displaySite
     }
 
     private var time: String {
-        if item.progress >= 0.98 { return "Read" }
+        if item.isFinished { return "Read" }
         guard item.progress >= WidgetPicks.startedProgress else { return "\(item.minutes) min" }
         let left = (Double(item.minutes) * (1 - item.progress)).rounded(.up)
         return "\(max(1, Int(left))) min left"
     }
 }
 
-private struct ProgressLine: View {
+/// The frame: a sage hairline inset 7pt from the edge, with a brass dot on each side 23pt
+/// from the top and the bottom.
+private struct PlateFrame: View {
+    var body: some View {
+        GeometryReader { proxy in
+            let w = proxy.size.width, h = proxy.size.height
+            ZStack {
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(Plate.sage, lineWidth: 0.6)
+                    .opacity(0.7)
+                    .padding(7)
+                Path { path in
+                    for point in [CGPoint(x: 7, y: 23), CGPoint(x: w - 7, y: 23),
+                                  CGPoint(x: 7, y: h - 23), CGPoint(x: w - 7, y: h - 23)] {
+                        path.addEllipse(in: CGRect(x: point.x - 1.3, y: point.y - 1.3, width: 2.6, height: 2.6))
+                    }
+                }
+                .fill(Plate.brass)
+            }
+        }
+        .allowsHitTesting(false)
+    }
+}
+
+/// A row rule: brass hairline with a small dot at both ends.
+private struct RowRule: View {
+    var body: some View {
+        GeometryReader { proxy in
+            let w = proxy.size.width, y = proxy.size.height / 2
+            Path { path in
+                path.move(to: CGPoint(x: 0, y: y))
+                path.addLine(to: CGPoint(x: w, y: y))
+            }
+            .stroke(Plate.brass.opacity(0.45), lineWidth: 0.4)
+            Path { path in
+                for x in [0, w] { path.addEllipse(in: CGRect(x: x - 0.9, y: y - 0.9, width: 1.8, height: 1.8)) }
+            }
+            .fill(Plate.brass.opacity(0.8))
+        }
+        .frame(height: 1.8)
+    }
+}
+
+/// Reading progress as a brass hairline: solid up to where he stopped, ending in a vermilion dot.
+private struct ProgressRule: View {
     let progress: Double
 
     var body: some View {
         GeometryReader { proxy in
-            ZStack(alignment: .leading) {
-                Capsule().fill(Marigold.gold.opacity(0.2))
-                Capsule().fill(Marigold.gold).frame(width: proxy.size.width * progress)
+            let w = proxy.size.width, y = proxy.size.height / 2
+            let end = w * min(max(progress, 0), 1)
+            Path { path in
+                path.move(to: CGPoint(x: 0, y: y))
+                path.addLine(to: CGPoint(x: w, y: y))
             }
+            .stroke(Plate.brass.opacity(0.45), lineWidth: 0.4)
+            Path { path in
+                path.move(to: CGPoint(x: 0, y: y))
+                path.addLine(to: CGPoint(x: end, y: y))
+            }
+            .stroke(Plate.brass, lineWidth: 1)
+            Path { path in
+                path.addEllipse(in: CGRect(x: end - 1.3, y: y - 1.3, width: 2.6, height: 2.6))
+            }
+            .fill(Plate.vermilion)
         }
-        .frame(height: 3)
-    }
-}
-
-/// A gold-foil ring with a check, like the deck's card borders.
-private struct DoneButton: View {
-    let itemID: String
-
-    var body: some View {
-        Button(intent: MarkDoneIntent(itemID: itemID)) {
-            Image(systemName: "checkmark")
-                .font(.system(size: 10, weight: .bold))
-                .foregroundStyle(Marigold.gold)
-                .frame(width: 26, height: 26)
-                .overlay(Circle().strokeBorder(Marigold.gold.opacity(0.45), lineWidth: 1))
-        }
-        .buttonStyle(.plain)
+        .frame(height: 2.6)
     }
 }
 
 extension Item {
     /// Opens the item in the app's reader.
-    var link: URL { URL(string: "bouquet://item/\(id)")! }
+    var link: URL { URL(string: "sprig://item/\(id)")! }
 }

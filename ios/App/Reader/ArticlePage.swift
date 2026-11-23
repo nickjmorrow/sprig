@@ -1,4 +1,4 @@
-import BouquetCore
+import SprigCore
 import Foundation
 
 /// The reader's HTML and scroll-progress script, shared by the iPhone and Mac web views.
@@ -22,13 +22,13 @@ enum ArticlePage {
     static func html(for item: Item, fontSize: Int, extraCSS: String = "") -> String {
         let stylesheet = Bundle.main.url(forResource: "reader", withExtension: "css")
             .flatMap { try? String(contentsOf: $0, encoding: .utf8) } ?? ""
-        let kicker = ([item.displaySite] + item.topics.prefix(1)).map(escape).joined(separator: " · ")
+        let byline = ([item.displaySite] + item.topics.prefix(1)).map(escape).joined(separator: " · ")
         let title = item.kind == .tweet ? "" : "<h1 class=\"title\">\(escape(item.displayTitle))</h1>"
         return """
         <!doctype html><html><head><meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <style>\(stylesheet) :root { --size: \(fontSize)px; } \(extraCSS)</style></head>
-        <body><div class="kicker">\(kicker) · <b>\(item.minutes) min</b></div>\(title)\(item.contentHtml)</body></html>
+        <body>\(title)<p class="byline">\(byline) · <b>\(item.minutes) min</b></p>\(item.contentHtml)</body></html>
         """
     }
 

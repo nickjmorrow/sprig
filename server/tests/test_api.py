@@ -1,7 +1,7 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from bouquet.api import create_app
+from sprig.api import create_app
 
 TOKEN = "secret-token"
 AUTH = {"Authorization": f"Bearer {TOKEN}"}

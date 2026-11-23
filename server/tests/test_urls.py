@@ -1,4 +1,4 @@
-from bouquet.urls import canonical_url, tweet_id
+from sprig.urls import canonical_url, tweet_id
 
 
 def test_canonical_url_twitter_becomes_x_and_drops_share_params():

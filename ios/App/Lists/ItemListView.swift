@@ -1,4 +1,4 @@
-import BouquetCore
+import SprigCore
 import SwiftUI
 
 /// Inbox, Feed or Archive: the filter bar, then the matching items, newest first.
@@ -11,6 +11,7 @@ struct ItemListView: View {
     @State private var items: [Item] = []
     @State private var topics: [String] = []
     @State private var filter: ItemFilter
+    @State private var searchText = ""
     @State private var showingSettings = false
     @AppStorage private var savedFilter: String
 
@@ -28,10 +29,8 @@ struct ItemListView: View {
                 Section {
                     ForEach(items) { item in
                         // A hidden link under the row keeps the tap target without List's chevron.
-                        ItemRow(item: item)
+                        ItemRow(item: item, searchTerms: filter.searchTerms)
                             .background { NavigationLink(value: item) { EmptyView() }.opacity(0) }
-                            .listRowBackground(Theme.bg)
-                            .listRowSeparatorTint(Theme.line)
                             .swipeActions(edge: .leading) { leadingSwipe(item) }
                             .swipeActions(edge: .trailing) { trailingSwipe(item) }
                     }
@@ -39,21 +38,18 @@ struct ItemListView: View {
                     FilterBar(filter: $filter, topics: chipTopics, showsFavorites: location == .archive)
                         .listRowInsets(EdgeInsets())
                         .textCase(nil)
+                        .background(Theme.bg)
                 }
             }
             .listStyle(.plain)
-            .scrollContentBackground(.hidden)
-            .background(Theme.bg)
             .overlay { if items.isEmpty { emptyState } }
             .navigationTitle(title)
-            .toolbarBackground(Theme.bg, for: .navigationBar)
+            .searchable(text: $searchText, prompt: "Search")
+            .task(id: searchText) { await applySearch() }
             .navigationDestination(for: Item.self) { item in ReaderView(itemID: item.id) }
             .toolbar {
-                if location == .inbox {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button { showingSettings = true } label: { Image(systemName: "gearshape") }
-                            .tint(Theme.dim)
-                    }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Settings", systemImage: "gearshape") { showingSettings = true }
                 }
             }
             .sheet(isPresented: $showingSettings) { SettingsView() }
@@ -73,25 +69,45 @@ struct ItemListView: View {
     }
 
     private var emptyState: some View {
-        VStack(spacing: 8) {
-            Image(systemName: location == .archive ? "archivebox" : "sparkles")
-                .font(.system(size: 28))
-                .foregroundStyle(Theme.faint)
+        ContentUnavailableView {
+            Label(emptyTitle, systemImage: emptySymbol)
+        } description: {
             Text(emptyMessage)
-                .font(.subheadline)
-                .foregroundStyle(Theme.dim)
-                .multilineTextAlignment(.center)
         }
-        .padding(.top, 160)
+        .padding(.top, 180)
         .allowsHitTesting(false)
     }
 
-    private var emptyMessage: String {
-        if filter.range != .any || filter.topic != nil || filter.favoritesOnly { return "Nothing matches this filter." }
+    private var isFiltered: Bool {
+        filter.isSearching || filter.range != .any || filter.topic != nil || filter.favoritesOnly
+    }
+
+    private var emptySymbol: String {
+        if isFiltered { return filter.isSearching ? "magnifyingglass" : "line.3.horizontal.decrease" }
         switch location {
-        case .inbox: return "Nothing here.\nShare a link to Bouquet."
-        case .feed: return "No new posts.\nAdd feeds in Settings."
-        case .archive: return "Nothing archived yet."
+        case .inbox: return "tray"
+        case .feed: return "dot.radiowaves.up.forward"
+        case .archive: return "archivebox"
+        }
+    }
+
+    private var emptyTitle: String {
+        if filter.isSearching { return "No Results" }
+        if isFiltered { return "Nothing Matches" }
+        switch location {
+        case .inbox: return "Inbox Zero"
+        case .feed: return "All Caught Up"
+        case .archive: return "Nothing Archived"
+        }
+    }
+
+    private var emptyMessage: String {
+        if filter.isSearching { return "No stories in this tab match your search." }
+        if isFiltered { return "Try another reading time or topic." }
+        switch location {
+        case .inbox: return "Share a link to Sprig to save it here."
+        case .feed: return "No new posts. Add feeds in Settings."
+        case .archive: return "Stories you archive land here."
         }
     }
 
@@ -99,14 +115,14 @@ struct ItemListView: View {
     private func leadingSwipe(_ item: Item) -> some View {
         switch location {
         case .inbox:
-            Button { engine.update(item, PatchChanges(location: .archive)) } label: { Label("Archive", systemImage: "archivebox") }
-                .tint(Theme.line)
+            Button { engine.archive(item) } label: { Label("Archive", systemImage: "archivebox") }
+                .tint(.indigo)
         case .feed:
             Button { engine.update(item, PatchChanges(location: .inbox)) } label: { Label("Keep", systemImage: "tray.and.arrow.down") }
                 .tint(Theme.accent)
         case .archive:
             Button { engine.update(item, PatchChanges(location: .inbox)) } label: { Label("Inbox", systemImage: "tray") }
-                .tint(Theme.line)
+                .tint(.blue)
         }
     }
 
@@ -117,10 +133,10 @@ struct ItemListView: View {
             Button { engine.update(item, PatchChanges(favorite: !item.favorite)) } label: {
                 Label(item.favorite ? "Unstar" : "Star", systemImage: item.favorite ? "star.slash" : "star")
             }
-            .tint(Theme.accent)
+            .tint(Theme.star)
         case .feed:
-            Button { engine.update(item, PatchChanges(location: .archive)) } label: { Label("Archive", systemImage: "archivebox") }
-                .tint(Theme.line)
+            Button { engine.archive(item) } label: { Label("Archive", systemImage: "archivebox") }
+                .tint(.indigo)
         }
     }
 
@@ -137,14 +153,22 @@ struct ItemListView: View {
         }
     }
 
+    /// Waits for a pause in typing, so a fast typist doesn't search the whole tab on every key.
+    private func applySearch() async {
+        if !searchText.isEmpty { try? await Task.sleep(for: .milliseconds(250)) }
+        guard !Task.isCancelled else { return }
+        filter.query = searchText
+    }
+
     private func loadTopics() {
         topics = (try? engine.store.topics()) ?? []
     }
 
     private func restoreFilter() {
         guard let data = savedFilter.data(using: .utf8),
-              let saved = try? JSONDecoder().decode(ItemFilter.self, from: data),
+              var saved = try? JSONDecoder().decode(ItemFilter.self, from: data),
               saved.location == location else { return }
+        saved.query = filter.query
         filter = saved
     }
 

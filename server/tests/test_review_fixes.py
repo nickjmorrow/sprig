@@ -2,8 +2,8 @@
 
 import pytest
 
-from bouquet import pipeline
-from bouquet.pipeline import process_item
+from sprig import pipeline
+from sprig.pipeline import process_item
 
 from conftest import fixture_text
 from test_pipeline import FakeTagger, no_network
@@ -59,7 +59,7 @@ def test_reset_when_server_seq_went_backwards(store):
 def test_changes_route_sends_full_snapshot_on_reset(store):
     from fastapi.testclient import TestClient
 
-    from bouquet.api import create_app
+    from sprig.api import create_app
 
     store.create_item("https://example.com/a")
     api = TestClient(create_app(store, {"t": "iphone"}))

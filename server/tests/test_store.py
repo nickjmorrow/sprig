@@ -1,4 +1,4 @@
-from bouquet.store import STARTER_TOPICS, Store
+from sprig.store import STARTER_TOPICS, Store
 
 
 def test_create_and_changes_since(store):

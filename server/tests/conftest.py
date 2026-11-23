@@ -2,14 +2,14 @@ from pathlib import Path
 
 import pytest
 
-from bouquet.store import Store
+from sprig.store import Store
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
 
 @pytest.fixture
 def store(tmp_path):
-    return Store(tmp_path / "bouquet.sqlite")
+    return Store(tmp_path / "sprig.sqlite")
 
 
 def fixture_text(name: str) -> str:

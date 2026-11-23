@@ -1,7 +1,7 @@
 [project]
-name = "bouquet"
+name = "sprig"
 version = "0.1.0"
-description = "Bouquet server: saves, cleans, times and tags things to read."
+description = "Sprig server: saves, cleans, times and tags things to read."
 requires-python = ">=3.12"
 dependencies = [
     "anthropic",
@@ -13,7 +13,7 @@ dependencies = [
 ]
 
 [project.scripts]
-bouquet = "bouquet.cli:main"
+sprig = "sprig.cli:main"
 
 [dependency-groups]
 dev = ["pytest"]

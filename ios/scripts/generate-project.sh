@@ -1,5 +1,5 @@
 #!/bin/sh
-# Generates ios/Bouquet.xcodeproj, injecting machine-specific values from ios/.env (see .env.example).
+# Generates ios/Sprig.xcodeproj, injecting machine-specific values from ios/.env (see .env.example).
 set -e
 root="$(cd "$(dirname "$0")/.." && pwd)"
 if [ -f "$root/.env" ]; then set -a; . "$root/.env"; set +a; fi

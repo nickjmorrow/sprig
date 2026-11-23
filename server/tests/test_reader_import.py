@@ -3,8 +3,8 @@ import stat
 
 import httpx
 
-from bouquet import cli
-from bouquet.reader_import import import_opml, import_reader
+from sprig import cli
+from sprig.reader_import import import_opml, import_reader
 
 from conftest import FIXTURES
 
@@ -61,7 +61,7 @@ def test_import_opml_adds_feeds_including_nested(store):
 
 
 def test_token_add_writes_private_file(tmp_path, monkeypatch, capsys):
-    monkeypatch.setenv("BOUQUET_HOME", str(tmp_path))
+    monkeypatch.setenv("SPRIG_HOME", str(tmp_path))
     cli.main(["token", "add", "iphone"])
     token = capsys.readouterr().out.strip()
     tokens_file = tmp_path / "tokens.json"

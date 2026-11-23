@@ -1,4 +1,4 @@
-import BouquetCore
+import SprigCore
 import SwiftUI
 
 /// Add, rename, reorder and delete topics. Saving re-tags what Claude tagged with a changed topic.

@@ -1,10 +1,10 @@
-import BouquetCore
+import SprigCore
 import SwiftUI
 
-/// The floating glass bar at the bottom of the reader.
-struct ReaderBar: View {
+/// The reader's bottom toolbar.
+struct ReaderBar: ToolbarContent {
     let item: Item
-    let onFontSize: () -> Void
+    @Binding var fontStep: Int
     let onFavorite: () -> Void
     let onArchive: () -> Void
     let onEditTopics: () -> Void
@@ -12,49 +12,51 @@ struct ReaderBar: View {
     let onRetry: () -> Void
     @Environment(\.openURL) private var openURL
 
-    var body: some View {
-        HStack(spacing: 26) {
+    var body: some ToolbarContent {
+        ToolbarItemGroup(placement: .bottomBar) {
             if item.kind == .tweet {
                 button("Open in X", systemImage: "arrow.up.right.square") { openOriginal() }
             } else {
-                button("Text size", systemImage: "textformat.size", action: onFontSize)
+                Menu {
+                    ControlGroup {
+                        Button("Smaller Text", systemImage: "textformat.size.smaller") { fontStep = max(fontStep - 1, 0) }
+                            .disabled(fontStep <= 0)
+                        Button("Larger Text", systemImage: "textformat.size.larger") {
+                            fontStep = min(fontStep + 1, ArticlePage.fontSizes.count - 1)
+                        }
+                        .disabled(fontStep >= ArticlePage.fontSizes.count - 1)
+                    }
+                } label: {
+                    Label("Text Size", systemImage: "textformat.size")
+                }
             }
+            Spacer()
             button(item.favorite ? "Unstar" : "Star", systemImage: item.favorite ? "star.fill" : "star", action: onFavorite)
-                .foregroundStyle(item.favorite ? Theme.accent : Theme.text)
+                .tint(item.favorite ? Theme.star : nil)
+                .sensoryFeedback(.impact(weight: .light), trigger: item.favorite)
+            Spacer()
             if item.location != .archive {
                 button("Archive", systemImage: "archivebox", action: onArchive)
+                Spacer()
             }
             Menu {
-                Button("Mark as unread", systemImage: "circlebadge", action: onMarkUnread)
-                Button("Open original", systemImage: "safari") { openOriginal() }
+                Button("Mark as Unread", systemImage: "circlebadge", action: onMarkUnread)
+                Button("Open Original", systemImage: "safari") { openOriginal() }
                 if let url = URL(string: item.url) {
                     ShareLink(item: url) { Label("Share", systemImage: "square.and.arrow.up") }
                 }
-                Button("Edit topics", systemImage: "tag", action: onEditTopics)
+                Button("Edit Topics", systemImage: "tag", action: onEditTopics)
                 if item.status == .failed {
-                    Button("Try again", systemImage: "arrow.clockwise", action: onRetry)
+                    Button("Try Again", systemImage: "arrow.clockwise", action: onRetry)
                 }
             } label: {
-                Image(systemName: "ellipsis").frame(width: 28, height: 28)
+                Label("More", systemImage: "ellipsis.circle")
             }
-            .accessibilityLabel("More")
         }
-        .font(.system(size: 18, weight: .medium))
-        .foregroundStyle(Theme.text)
-        .padding(.horizontal, 24)
-        .padding(.vertical, 12)
-        .background(.ultraThinMaterial, in: Capsule())
-        .overlay(Capsule().strokeBorder(.white.opacity(0.08)))
-        .shadow(color: .black.opacity(0.4), radius: 16, y: 6)
-        .padding(.bottom, 14)
     }
 
     private func button(_ label: String, systemImage: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Image(systemName: systemImage).frame(width: 28, height: 28)
-        }
-        .accessibilityLabel(label)
-        .sensoryFeedback(.impact(weight: .light), trigger: item.favorite)
+        Button(label, systemImage: systemImage, action: action)
     }
 
     private func openOriginal() {

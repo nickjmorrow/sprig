@@ -1,4 +1,4 @@
-from bouquet.timing import minutes_for, word_count
+from sprig.timing import minutes_for, word_count
 
 
 def test_minutes_has_a_floor_of_one():
