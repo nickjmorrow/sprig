@@ -105,7 +105,7 @@ class ClaudeCodeTagger:
 
 
 def claude_code_binary() -> str | None:
-    """$CLAUDE_BIN, else the copy the Claude app keeps current, else Homebrew's (as Hob finds it)."""
+    """$CLAUDE_BIN, else the copy the Claude app keeps current, else Homebrew's."""
     if os.environ.get("CLAUDE_BIN"):
         return os.environ["CLAUDE_BIN"]
     base = Path.home() / "Library/Application Support/Claude/claude-code"

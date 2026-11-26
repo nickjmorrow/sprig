@@ -4,10 +4,10 @@
 <dict>
   <key>Label</key><string>com.nicholai.sprig</string>
   <key>ProgramArguments</key>
-  <array><string><home>/Projects/sprig/server/ops/run.sh</string></array>
+  <array><string>__HOME__/Projects/sprig/server/ops/run.sh</string></array>
   <key>RunAtLoad</key><true/>
   <key>KeepAlive</key><true/>
-  <key>StandardOutPath</key><string><home>/Library/Logs/sprig.log</string>
-  <key>StandardErrorPath</key><string><home>/Library/Logs/sprig.log</string>
+  <key>StandardOutPath</key><string>__HOME__/Library/Logs/sprig.log</string>
+  <key>StandardErrorPath</key><string>__HOME__/Library/Logs/sprig.log</string>
 </dict>
 </plist>
