@@ -33,7 +33,7 @@ targets:
             CFBundleURLSchemes: [sprig]
         UILaunchScreen:
           UIColorName: LaunchBackground
-        # Tailscale's tunnel is encrypted; this lets a plain-HTTP tailnet address work too, as in Forge.
+        # Tailscale's tunnel is encrypted; this lets a plain-HTTP tailnet address work too.
         NSAppTransportSecurity:
           NSAllowsArbitraryLoads: true
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]

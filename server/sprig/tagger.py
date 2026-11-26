@@ -69,7 +69,7 @@ def topic_schema(topics: list[str]) -> dict:
 
 
 class ClaudeCodeTagger:
-    """Tags through Edgar's signed-in Claude Code (headless `claude -p`), like Hob: no API key needed."""
+    """Tags through Edgar's signed-in Claude Code (headless `claude -p`): no API key needed."""
 
     def __init__(self, binary: str | None = None, run=subprocess.run):
         """Without a binary, finds Claude Code on every call: the app replaces its copy when it updates."""

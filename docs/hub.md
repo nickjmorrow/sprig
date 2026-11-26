@@ -9,7 +9,7 @@ The server keeps everything in `~/sprig-hub` (`sprig.sqlite`, `tokens.json`; set
 3. Put the Anthropic key in Bitwarden as `env:ANTHROPIC_API_KEY` and run `secrets.py pull` from Edgar's login session, so `~/.zshrc.local` has it. Without it everything works except tagging.
 4. Run it under launchd:
    ```bash
-   cp server/ops/com.nicholai.sprig.plist ~/Library/LaunchAgents/
+   sed "s|<home>|$HOME|g" server/ops/com.nicholai.sprig.plist > ~/Library/LaunchAgents/com.nicholai.sprig.plist
    launchctl load ~/Library/LaunchAgents/com.nicholai.sprig.plist
    ```
    Log: `~/Library/Logs/sprig.log`. `curl localhost:8792/health` → `{"ok":true}`.
