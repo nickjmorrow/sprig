@@ -13,7 +13,7 @@ from sprig.extract import Extracted, extract_article, site_of
 from sprig.store import Store
 from sprig.tagger import Tagger
 from sprig.timing import minutes_for, word_count
-from sprig.tweets import article_to_extracted, fetch_thread, shared_link, thread_to_extracted
+from sprig.tweets import article_to_extracted, embedded_tweet_cards, fetch_thread, shared_link, thread_to_extracted
 from sprig.urls import tweet_id
 from sprig.x_articles import article_owner, fetch_article
 
@@ -91,7 +91,9 @@ def load(item: dict, http: httpx.Client) -> Extracted:
         if len(thread) == 1 and (link := shared_link(thread[0])):
             raise SharesLink(link)
         if owner := article_owner(thread[-1]):
-            return article_to_extracted(thread, owner, fetch_article(owner["id_str"], http))
+            article = fetch_article(owner["id_str"], http)
+            cards = embedded_tweet_cards(article, http) if article else {}
+            return article_to_extracted(thread, owner, article, cards)
         return thread_to_extracted(thread)
     if item["source_html"]:
         return extract_article(item["source_html"], url)
@@ -120,9 +122,11 @@ def process_item(store: Store, item_id: str, *, http: httpx.Client, tagger: Tagg
     words = word_count(extracted.text)
     has_real_title = extracted.title != item["url"]
     # Tweets are short by nature; only an empty one (endpoint down) sends him to the web.
-    min_words = 1 if item["kind"] == "tweet" else MIN_WORDS
+    kind = extracted.kind or item["kind"]
+    min_words = 1 if kind == "tweet" else MIN_WORDS
     store.update_item(
         item_id,
+        kind=kind,
         status="ready" if words >= min_words else "web_only",
         title=extracted.title if has_real_title or not item["title"] else item["title"],
         author=extracted.author,

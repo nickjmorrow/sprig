@@ -150,12 +150,26 @@ def thread_to_extracted(thread: list[dict]) -> Extracted:
     )
 
 
-def article_to_extracted(thread: list[dict], owner: dict, article: dict | None) -> Extracted:
+def embedded_tweet_cards(article: dict, http: httpx.Client) -> dict[str, str]:
+    """Cards for the posts an article embeds; one that can't be fetched is left out (it stays a link)."""
+    cards = {}
+    for entry in article["content"].get("entityMap", []):
+        if entry["value"]["type"] != "TWEET":
+            continue
+        tweet_id = entry["value"]["data"]["tweetId"]
+        try:
+            cards[tweet_id] = tweet_card(fetch_tweet(tweet_id, http), quoted=True)
+        except (httpx.HTTPError, ValueError):
+            continue
+    return cards
+
+
+def article_to_extracted(thread: list[dict], owner: dict, article: dict | None, tweet_cards: dict[str, str] | None = None) -> Extracted:
     """A tweet that carries an X Article. A lone tweet announcing its own article becomes the
     article; a thread or a quote keeps its cards and gets the article underneath."""
     summary = owner["article"]
     title = (article or summary).get("title") or "Article on X"
-    body = cover_html(article or summary) + (body_html(article) if article else preview_html(summary))
+    body = cover_html(article or summary) + (body_html(article, tweet_cards) if article else preview_html(summary))
     text = body_text(article) if article else summary.get("preview_text", "")
     if len(thread) > 1 or owner is not thread[0]:
         cards = thread_to_extracted(thread)
@@ -169,4 +183,5 @@ def article_to_extracted(thread: list[dict], owner: dict, article: dict | None) 
         published_at=owner.get("created_at"),
         html=body,
         text=text,
+        kind="article",  # so the reader gives it a headline, like any other article
     )

@@ -19,6 +19,31 @@
       "__typename": "ApiImage",
       "original_img_url": "https://pbs.twimg.com/media/diagram.jpg"
      }
+    },
+    {
+     "media_id": "88",
+     "media_info": {
+      "__typename": "ApiVideo",
+      "preview_image": {
+       "original_img_url": "https://pbs.twimg.com/thumb.jpg"
+      },
+      "variants": [
+       {
+        "bit_rate": 632000,
+        "content_type": "video/mp4",
+        "url": "https://video.twimg.com/low.mp4"
+       },
+       {
+        "bit_rate": 2176000,
+        "content_type": "video/mp4",
+        "url": "https://video.twimg.com/high.mp4"
+       },
+       {
+        "content_type": "application/x-mpegURL",
+        "url": "https://video.twimg.com/pl.m3u8"
+       }
+      ]
+     }
     }
    ],
    "content": {
@@ -139,6 +164,78 @@
      {
       "data": {},
       "key": "k",
+      "text": " ",
+      "type": "atomic",
+      "inlineStyleRanges": [],
+      "entityRanges": [
+       {
+        "key": 5,
+        "offset": 0,
+        "length": 1
+       }
+      ]
+     },
+     {
+      "data": {},
+      "key": "k",
+      "text": " ",
+      "type": "atomic",
+      "inlineStyleRanges": [],
+      "entityRanges": [
+       {
+        "key": 6,
+        "offset": 0,
+        "length": 1
+       }
+      ]
+     },
+     {
+      "data": {},
+      "key": "k",
+      "text": " ",
+      "type": "atomic",
+      "inlineStyleRanges": [],
+      "entityRanges": [
+       {
+        "key": 7,
+        "offset": 0,
+        "length": 1
+       }
+      ]
+     },
+     {
+      "data": {
+       "urls": [
+        {
+         "fromIndex": 6,
+         "toIndex": 13,
+         "text": "Vast.ai"
+        }
+       ],
+       "mentions": [
+        {
+         "fromIndex": 20,
+         "toIndex": 24,
+         "text": "ada"
+        }
+       ],
+       "hashtags": [
+        {
+         "fromIndex": 25,
+         "toIndex": 31,
+         "text": "loops"
+        }
+       ]
+      },
+      "key": "k",
+      "text": "🔁 Try Vast.ai, says @ada\n#loops",
+      "type": "unstyled",
+      "inlineStyleRanges": [],
+      "entityRanges": []
+     },
+     {
+      "data": {},
+      "key": "k",
       "text": "Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it. Loops nest inside loops, each one checking the one below it.",
       "type": "unstyled",
       "inlineStyleRanges": [],
@@ -166,7 +263,8 @@
          {
           "mediaId": "77"
          }
-        ]
+        ],
+        "caption": "FIG A: loops & layers"
        }
       }
      },
@@ -194,7 +292,41 @@
        "type": "TWEET",
        "mutability": "Immutable",
        "data": {
-        "tweetId": "555"
+        "tweetId": "100"
+       }
+      }
+     },
+     {
+      "key": "5",
+      "value": {
+       "type": "MEDIA",
+       "mutability": "Immutable",
+       "data": {
+        "mediaItems": [
+         {
+          "mediaId": "88"
+         }
+        ]
+       }
+      }
+     },
+     {
+      "key": "6",
+      "value": {
+       "type": "MARKDOWN",
+       "mutability": "Mutable",
+       "data": {
+        "markdown": "| Loop | Runs |\n| --- | --- |\n| **L0** | `seconds` & up |"
+       }
+      }
+     },
+     {
+      "key": "7",
+      "value": {
+       "type": "TWEET",
+       "mutability": "Immutable",
+       "data": {
+        "tweetId": "999"
        }
       }
      }

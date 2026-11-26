@@ -35,3 +35,23 @@ def test_clean_html_drops_scripts():
 def test_drops_leading_h1_that_repeats_the_title():
     result = extract_article(fixture_text("article.html"), URL)
     assert not result.html.lstrip().startswith("<h1>")
+
+
+FORMATTED = """<html><head><title>Formatting</title></head><body><article>
+<p>This is a <strong>bold claim</strong> with <em>emphasis</em> and some <code>inline_code()</code> in a sentence
+that is long enough for the extractor to keep without any trouble at all.</p>
+<ol><li>First step of the thing</li><li>Second step of the thing</li></ol>
+<ul><li>A plain bullet</li></ul>
+<pre><code>def f():
+    return 1
+</code></pre>
+<p>More padding text. More padding text. More padding text. More padding text. More padding text.</p>
+</article></body></html>"""
+
+
+def test_keeps_bold_italics_inline_code_and_numbered_lists():
+    html = extract_article(FORMATTED, "https://example.com/post").html
+    assert "<strong>bold claim</strong>" in html and "<i>emphasis</i>" in html
+    assert "some <code>inline_code()</code> in a sentence" in html
+    assert "<ol><li>First step of the thing</li>" in html and "<ul><li>A plain bullet</li></ul>" in html
+    assert "<pre><code>def f():\n    return 1\n</code></pre>" in html
