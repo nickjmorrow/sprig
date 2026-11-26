@@ -26,10 +26,10 @@ struct UndoArchiveBar: View {
 
     private func bar(_ archived: ArchivedStory) -> some View {
         HStack(spacing: 12) {
-            Image(systemName: archived.automatically ? "checkmark.circle.fill" : "archivebox.fill")
+            Image(systemName: "archivebox.fill")
                 .foregroundStyle(Theme.accent)
             VStack(alignment: .leading, spacing: 1) {
-                Text(archived.automatically ? "Finished, so archived" : "Archived")
+                Text("Archived")
                     .font(.subheadline.weight(.semibold))
                 Text(archived.item.displayTitle)
                     .font(.footnote)

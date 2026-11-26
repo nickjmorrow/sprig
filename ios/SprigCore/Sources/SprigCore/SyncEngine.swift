@@ -85,10 +85,10 @@ public final class SyncEngine: ObservableObject {
     }
 
     /// Archives a story and remembers where it was, for Undo.
-    public func archive(_ item: Item, progress: Double? = nil, automatically: Bool = false) {
+    public func archive(_ item: Item, progress: Double? = nil) {
         guard item.location != .archive else { return }
         update(item, PatchChanges(location: .archive, progress: progress))
-        lastArchived = ArchivedStory(item: item, from: item.location, automatically: automatically)
+        lastArchived = ArchivedStory(item: item, from: item.location)
     }
 
     /// Puts the last archived story back where it was.
@@ -176,6 +176,4 @@ public struct ArchivedStory: Equatable, Identifiable, Sendable {
     public let id = UUID()
     public let item: Item
     public let from: Location
-    /// Archived because it was read to the end, not by an Archive action.
-    public let automatically: Bool
 }

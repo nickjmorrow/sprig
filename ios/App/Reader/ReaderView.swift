@@ -91,15 +91,9 @@ struct ReaderView: View {
         }
     }
 
-    /// Going back after reading to the end archives the story; the list offers Undo.
+    /// Leaving only saves how far you read. A finished story stays put until you archive it yourself.
     private func leave() {
-        if let item, Item.readToEnd(from: startProgress, to: progress, in: item.location),
-           (try? engine.store.item(id: item.id))?.location == item.location {
-            self.item?.progress = progress
-            engine.archive(item, progress: progress, automatically: true)
-        } else {
-            saveProgress()
-        }
+        saveProgress()
     }
 
     private func saveProgress() {

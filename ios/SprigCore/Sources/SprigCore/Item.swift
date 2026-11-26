@@ -52,12 +52,6 @@ public struct Item: Codable, Identifiable, Hashable, Sendable, FetchableRecord, 
     /// Scrolled to (nearly) the bottom.
     public static let finishedProgress = 0.98
     public var isFinished: Bool { progress >= Self.finishedProgress }
-
-    /// Whether leaving the reader should archive the story: it was read to the end on this visit.
-    /// Reopening something already finished, or a page too short to scroll, doesn't count.
-    public static func readToEnd(from start: Double, to end: Double, in location: Location) -> Bool {
-        location != .archive && start < finishedProgress && end >= finishedProgress
-    }
 }
 
 public struct Feed: Codable, Identifiable, Hashable, Sendable {

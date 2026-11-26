@@ -32,7 +32,7 @@ Built for one reader. Topics come from his own short list (assigned by Claude), 
 
 - Filters: time range (Any, Under 5, 5–15, 15–30, 30+), topic chips, favorites (Archive), full-text search within a tab.
 - Actions: archive, keep (Feed → Inbox), move to Inbox, star, mark unread, open original, edit an item's topics.
-- Reading a story to the end and leaving it archives it; every archive shows an Undo bar for 8 seconds.
+- Nothing archives itself: a story read to the end stays where it is, marked Read, until he archives it. Every archive shows an Undo bar for 8 seconds.
 - Statuses an item can show: pending (being fetched), ready, failed (couldn't fetch), web only (paywall or too short; opens the page, and its row says Link only). Feed posts that failed or are web only are left out of the Feed.
 - Home-screen widget (Up Next) on iPhone.
 - Not built: highlights and notes, newsletters, offline images, Readwise-style review.

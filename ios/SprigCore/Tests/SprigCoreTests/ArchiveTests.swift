@@ -2,15 +2,6 @@ import Foundation
 import Testing
 @testable import SprigCore
 
-@Test func readingToTheEndOnThisVisitArchives() {
-    #expect(Item.readToEnd(from: 0.2, to: 1, in: .inbox))
-    #expect(Item.readToEnd(from: 0, to: 0.99, in: .feed))
-    // Not far enough, already finished before, or already archived.
-    #expect(!Item.readToEnd(from: 0, to: 0.9, in: .inbox))
-    #expect(!Item.readToEnd(from: 1, to: 1, in: .inbox))
-    #expect(!Item.readToEnd(from: 0, to: 1, in: .archive))
-}
-
 @MainActor
 @Test func archiveCanBeUndone() throws {
     let store = try LocalStore.inMemory()
@@ -18,10 +9,10 @@ import Testing
     let item = makeItem(id: "a", location: .feed)
     try store.upsert([item])
 
-    engine.archive(item, progress: 1, automatically: true)
+    engine.archive(item, progress: 1)
     #expect(try store.item(id: "a")?.location == .archive)
     #expect(try store.item(id: "a")?.progress == 1)
-    #expect(engine.lastArchived?.from == .feed && engine.lastArchived?.automatically == true)
+    #expect(engine.lastArchived?.from == .feed)
 
     engine.undoArchive()
     #expect(try store.item(id: "a")?.location == .feed)

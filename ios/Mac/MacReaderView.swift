@@ -114,15 +114,9 @@ struct MacReaderView: View {
         }
     }
 
-    /// Moving to another story after reading this one to the end archives it (Undo is offered).
+    /// Leaving only saves how far you read. A finished story stays put until you archive it yourself.
     private func leave() {
-        if let item, Item.readToEnd(from: startProgress, to: progress, in: item.location),
-           (try? engine.store.item(id: item.id))?.location == item.location {
-            storedProgress = progress
-            engine.archive(item, progress: progress, automatically: true)
-        } else {
-            saveProgress()
-        }
+        saveProgress()
     }
 
     private func saveProgress() {
