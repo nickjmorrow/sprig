@@ -42,7 +42,7 @@ def test_captions_video_tables_and_embedded_posts_survive():
     html = body_html(ARTICLE, {"100": "<article>the card</article>"})
     assert '<img src="https://pbs.twimg.com/media/diagram.jpg" alt=""><figcaption>FIG A: loops &amp; layers</figcaption>' in html
     assert '<video controls playsinline preload="none" poster="https://pbs.twimg.com/thumb.jpg" src="https://video.twimg.com/high.mp4">' in html
-    assert "<table><tr><th>Loop</th><th>Runs</th></tr><tr><td><b>L0</b></td><td><code>seconds</code> &amp; up</td></tr></table>" in html
+    assert "<table><tr><th>Loop</th><th>Runs</th></tr><tr><td><b>L0</b></td><td><code>seconds</code> &amp; up ~3)</td></tr></table>" in html
     assert "<article>the card</article>" in html
     assert '<a href="https://x.com/i/status/999">Post on X</a>' in html  # no card fetched: stays a link
 

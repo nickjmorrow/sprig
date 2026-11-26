@@ -316,7 +316,7 @@
        "type": "MARKDOWN",
        "mutability": "Mutable",
        "data": {
-        "markdown": "| Loop | Runs |\n| --- | --- |\n| **L0** | `seconds` & up |"
+        "markdown": "| Loop | Runs |\n| --- | --- |\n| **L0** | `seconds` & up \\~3\\) |"
        }
       }
      },

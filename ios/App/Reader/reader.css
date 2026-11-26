@@ -48,11 +48,11 @@ blockquote { margin: 1.4em 0; padding: 0 0 0 1em; border-left: 1px solid var(--l
 pre, code { font: 0.84em/1.5 ui-monospace, Menlo, monospace; font-variant-numeric: normal; }
 pre { background: var(--card); padding: 14px 16px; border-radius: 10px; overflow-x: auto; }
 :not(pre) > code { background: var(--card); padding: 0.1em 0.35em; border-radius: 5px; }
-table { border-collapse: collapse; width: 100%; font: 0.8em/1.45 -apple-system, system-ui, sans-serif; display: block; overflow-x: auto; font-variant-numeric: tabular-nums; }
+table { border-collapse: collapse; width: 100%; margin: 1.4em 0; font: 0.8em/1.45 -apple-system, system-ui, sans-serif; display: block; overflow-x: auto; font-variant-numeric: tabular-nums; }
 td, th { border-bottom: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; }
 th { color: var(--text); font-weight: 600; }
 hr { border: 0; border-top: 1px solid var(--line); margin: 2.2em 0; }
-figcaption { font: 0.76em/1.4 -apple-system, system-ui, sans-serif; color: var(--dim); text-align: center; margin-top: -0.6em; }
+figcaption { font: 0.76em/1.4 -apple-system, system-ui, sans-serif; color: var(--dim); text-align: center; margin: -0.6em 0 1.4em; }
 
 /* Saved tweets and threads */
 .tweet {

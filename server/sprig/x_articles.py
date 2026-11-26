@@ -16,6 +16,7 @@ FXTWITTER_URL = "https://api.fxtwitter.com/i/status/{tweet_id}"
 BLOCK_TAGS = {"unstyled": "p", "header-one": "h2", "header-two": "h3", "header-three": "h4", "blockquote": "blockquote"}
 LIST_TAGS = {"unordered-list-item": "ul", "ordered-list-item": "ol"}
 STYLE_TAGS = {"Bold": "b", "Italic": "i"}
+MARKDOWN_ESCAPE = re.compile(r"\\([\\`*_{}\[\]()#+\-.!~|>])")  # \~ and \) in a table cell mean ~ and )
 AUTO_LINKS = {
     "urls": lambda text: text if "://" in text else f"https://{text}",
     "mentions": lambda text: f"https://x.com/{text}",
@@ -131,7 +132,7 @@ def table_html(markdown: str) -> str:
 
 
 def table_cell(text: str) -> str:
-    cell = html.escape(text.strip())
+    cell = html.escape(MARKDOWN_ESCAPE.sub(r"\1", text.strip()))
     cell = re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", cell)
     return re.sub(r"`(.+?)`", r"<code>\1</code>", cell)
 
