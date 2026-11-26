@@ -10,6 +10,7 @@ import trafilatura
 DROP_TAGS = ("script", "style", "iframe", "form", "noscript", "object", "embed")
 KEEP_ATTRIBUTES = {"href", "src", "alt"}
 URL_ATTRIBUTES = ("href", "src")
+IMAGE_SOURCE_ATTRIBUTES = ("src", "data-src", "data-lazy-src", "data-original")
 INLINE_PARENTS = {"p", "li", "td", "th", "h1", "h2", "h3", "h4", "h5", "h6", "a", "strong", "b", "i", "em", "blockquote"}
 
 
@@ -55,10 +56,48 @@ def clean_html(html: str, url: str) -> str:
     return "".join(parts)
 
 
-def restore_structure(body: str | None, xml: str | None) -> str:
+def figure_captions(html: str, url: str) -> dict[str, str]:
+    """Each captioned image on the page: every address it might load from, to its caption."""
+    captions = {}
+    for figure in lxml.html.fromstring(html).iter("figure"):
+        caption = " ".join(" ".join(found.text_content() for found in figure.iter("figcaption")).split())
+        if not caption:
+            continue
+        for image in figure.iter("img", "source"):
+            sources = [image.get(name) for name in IMAGE_SOURCE_ATTRIBUTES]
+            sources += [candidate.split()[0] for candidate in (image.get("srcset") or "").split(",") if candidate.strip()]
+            for source in sources:
+                if source and not source.startswith("data:"):
+                    captions[urljoin(url, source)] = caption
+    return captions
+
+
+def add_captions(content, captions: dict[str, str]) -> None:
+    """trafilatura leaves a caption as an ordinary paragraph after its image, sometimes with words
+    missing, or drops it. Put the page's own caption there as a <figcaption>."""
+    for image in list(content.iter("img")):
+        caption = captions.get(image.get("src"))
+        if not caption:
+            continue
+        anchor = image
+        while anchor.getnext() is None and not (anchor.tail or "").strip() and anchor.getparent() is not content:
+            anchor = anchor.getparent()
+        following = anchor.getnext()
+        remains = "".join("".join(following.itertext()).split()) if following is not None and following.tag == "p" else ""
+        if remains and remains in "".join(caption.split()) and not (anchor.tail or "").strip():
+            tail = following.tail
+            following.clear()
+            following.tag, following.text, following.tail = "figcaption", caption, tail
+            continue
+        figcaption = lxml.etree.Element("figcaption")
+        figcaption.text, figcaption.tail, anchor.tail = caption, anchor.tail, None
+        anchor.getparent().insert(anchor.getparent().index(anchor) + 1, figcaption)
+
+
+def restore_structure(body: str | None, xml: str | None, captions: dict[str, str] | None = None) -> str:
     """Put back what trafilatura's HTML output flattens. It writes all code as <pre> (a block as
     <pre><pre>, inline code as a <pre> mid-sentence, which would break the line) and every list as
-    <ul>; its XML output still says which lists were numbered."""
+    <ul>; its XML output still says which lists were numbered. Image captions come from the page itself."""
     if not body:
         return ""
     # Parsed as XML: an HTML parser would lift a <pre> out of its paragraph before we could see it.
@@ -75,6 +114,7 @@ def restore_structure(body: str | None, xml: str | None) -> str:
             if is_numbered:
                 element.tag = "ol"
     content = root.find("body") if root.find("body") is not None else root
+    add_captions(content, captions or {})
     return (content.text or "") + "".join(lxml.etree.tostring(child, encoding="unicode", method="html") for child in content)
 
 
@@ -97,7 +137,7 @@ def extract_article(html: str, url: str) -> Extracted:
         author=metadata.author if metadata else None,
         site=site_of(url),
         published_at=metadata.date if metadata else None,
-        html=drop_title_heading(clean_html(restore_structure(body, structure), url), title),
+        html=drop_title_heading(clean_html(restore_structure(body, structure, figure_captions(html, url)), url), title),
         text=text,
     )
 
