@@ -40,7 +40,8 @@ struct MacReaderView: View {
                 item: item,
                 fontSize: ArticlePage.fontSizes[min(max(fontStep, 0), ArticlePage.fontSizes.count - 1)],
                 initialProgress: startProgress,
-                onProgress: { progress = $0 }
+                onProgress: { progress = $0 },
+                onArchive: { engine.archive(item) }
             )
         } else {
             LinkOnlyView(item: item, onRetry: { retry(item) })

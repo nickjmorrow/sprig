@@ -24,11 +24,15 @@ enum ArticlePage {
             .flatMap { try? String(contentsOf: $0, encoding: .utf8) } ?? ""
         let byline = ([item.displaySite] + item.topics.prefix(1)).map(escape).joined(separator: " · ")
         let title = item.kind == .tweet ? "" : "<h1 class=\"title\">\(escape(item.displayTitle))</h1>"
+        // Archiving is always his tap: here when he reaches the end, or in the toolbar at any point.
+        let archive = item.location == .archive ? "" : """
+            <button class="archive" onclick="webkit.messageHandlers.archive.postMessage(null)">Archive</button>
+            """
         return """
         <!doctype html><html><head><meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <style>\(stylesheet) :root { --size: \(fontSize)px; } \(extraCSS)</style></head>
-        <body>\(title)<p class="byline">\(byline) · <b>\(item.minutes) min</b></p>\(item.contentHtml)</body></html>
+        <body>\(title)<p class="byline">\(byline) · <b>\(item.minutes) min</b></p>\(item.contentHtml)\(archive)</body></html>
         """
     }
 

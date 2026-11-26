@@ -52,7 +52,8 @@ struct ReaderView: View {
                 item: item,
                 fontSize: articleFontSize,
                 initialProgress: startProgress,
-                onProgress: { progress = $0 }
+                onProgress: { progress = $0 },
+                onArchive: archive
             )
         } else {
             LinkOnlyView(item: item, onRetry: { retry(item) })
