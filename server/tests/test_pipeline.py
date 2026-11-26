@@ -197,3 +197,15 @@ def test_refetching_keeps_topics_he_set_himself(store):
     tagger = FakeTagger()
     done = process_item(store, item["id"], http=no_network(), tagger=tagger)
     assert done["topics"] == ["Cooking & baking"] and tagger.calls == []
+
+
+def test_excerpt_opens_with_what_the_reader_shows(store):
+    page = """<html><head><title>Learning Path</title></head><body><main>
+    <p>This site hosts our course materials. You are logging into it to reach them.</p>
+    <h1>Learning Path</h1><p>Take a customer from a first use case to a working pilot, on site, in enough words
+    to be kept by the extractor, and then a few more words so the page counts as readable for certain.</p>
+    <p>A second paragraph of ordinary body text that pads the page out past the minimum length for an article,
+    with yet more words here, and more, and more, and more, and more, and more, and more, and more.</p></main></body></html>"""
+    item = store.create_item("https://example.com/path", source_html=page)
+    done = process_item(store, item["id"], http=no_network(), tagger=None)
+    assert done["excerpt"].startswith("Take a customer from a first use case")

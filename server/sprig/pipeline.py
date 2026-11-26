@@ -142,6 +142,14 @@ def load(item: dict, http: httpx.Client) -> Extracted:
         return Extracted(item["title"] or url, None, site_of(url), None, text_as_html(item["shared_text"]), item["shared_text"])
 
 
+def excerpt_of(extracted: Extracted) -> str:
+    """The opening of what the reader will show, so it never quotes page chrome that was cleaned away."""
+    if not extracted.html.strip():
+        return " ".join(extracted.text.split())[:EXCERPT_CHARS]
+    shown = " ".join(lxml.html.fromstring(f"<div>{extracted.html}</div>").itertext())
+    return " ".join(shown.split())[:EXCERPT_CHARS]
+
+
 def process_item(store: Store, item_id: str, *, http: httpx.Client, tagger: Tagger | None) -> dict:
     item = store.get_item(item_id)
     try:
@@ -169,7 +177,7 @@ def process_item(store: Store, item_id: str, *, http: httpx.Client, tagger: Tagg
         author=extracted.author,
         site=extracted.site,
         published_at=extracted.published_at,
-        excerpt=" ".join(extracted.text.split())[:EXCERPT_CHARS],
+        excerpt=excerpt_of(extracted),
         content_html=extracted.html,
         word_count=words,
         minutes=minutes_for(words),
