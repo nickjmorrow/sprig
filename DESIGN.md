@@ -223,7 +223,7 @@ iPhone: system `.searchable` under the large title. Mac: a plain text field in a
 
 ### Reader Chrome
 - **iPhone bottom bar:** Text Size menu with Smaller / Larger (or Open in X for tweets), Star (gold when on, light haptic), Archive, More menu (Mark as Unread, Open Original, Share, Edit Topics, Try Again).
-- **Mac toolbar:** Smaller / Bigger Text, Star, Archive, Open Original, More.
+- **Mac controls:** the window has no title bar or toolbar. A material pill at the article's top right holds Text Size (a menu: Smaller / Bigger), Star, Archive and More (Open Original, Copy Link, Share, Mark as Unread, Edit Topics, Try Again).
 - **Progress line:** 2px Leaf across the top, animating linearly over 0.2s.
 - **Link-only page:** site, serif title, Dim message, a large `.borderedProminent` "Read on the Web" (or "Open in X").
 

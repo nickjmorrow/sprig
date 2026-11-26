@@ -37,6 +37,7 @@ struct MacRootView: View {
             SidebarRow(title: "Archive", systemImage: "archivebox", location: .archive, countsUnread: false).tag(Location.archive)
         }
         .navigationSplitViewColumnWidth(min: 170, ideal: 190, max: 260)
+        .toolbar(removing: .sidebarToggle)
         .safeAreaInset(edge: .bottom) { syncStatus }
     }
 

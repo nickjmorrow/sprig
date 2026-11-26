@@ -29,6 +29,8 @@ struct SprigMacApp: App {
                 }
         }
         .defaultSize(width: 1200, height: 800)
+        // No title bar or toolbar: the sidebar names the section and each article carries its own controls.
+        .windowStyle(.hiddenTitleBar)
         .commands {
             StoryCommands()
             CommandGroup(after: .toolbar) {

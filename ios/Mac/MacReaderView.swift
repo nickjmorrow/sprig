@@ -1,7 +1,7 @@
 import SprigCore
 import SwiftUI
 
-/// The right column: one story, with its actions in the window toolbar. The caller sets `.id(itemID)`,
+/// The right column: one story, with its actions in a pill at its top right. The caller sets `.id(itemID)`,
 /// so each story gets fresh state and its own scroll position.
 struct MacReaderView: View {
     let itemID: String
@@ -24,7 +24,9 @@ struct MacReaderView: View {
                 progressBar
             }
         }
-        .toolbar { if let item { toolbarItems(item) } }
+        .overlay(alignment: .topTrailing) {
+            if let item { controls(item).padding(.top, 8).padding(.trailing, 16) }
+        }
         .sheet(isPresented: $editingTopics) {
             if let item { TopicsSheet(item: item) }
         }
@@ -58,38 +60,63 @@ struct MacReaderView: View {
         .frame(height: 2)
     }
 
-    @ToolbarContentBuilder
-    private func toolbarItems(_ item: Item) -> some ToolbarContent {
-        ToolbarItemGroup(placement: .primaryAction) {
-            if item.kind != .tweet {
-                Button("Smaller Text", systemImage: "textformat.size.smaller") { fontStep = max(fontStep - 1, 0) }
-                    .disabled(fontStep <= 0)
-                Button("Bigger Text", systemImage: "textformat.size.larger") {
-                    fontStep = min(fontStep + 1, ArticlePage.fontSizes.count - 1)
+    /// The story's controls: a small pill at the article's top right, in place of a window toolbar.
+    private func controls(_ item: Item) -> some View {
+        HStack(spacing: 2) {
+            if item.kind == .article {
+                Menu {
+                    Button("Smaller Text", systemImage: "textformat.size.smaller") { fontStep = max(fontStep - 1, 0) }
+                        .disabled(fontStep <= 0)
+                    Button("Bigger Text", systemImage: "textformat.size.larger") {
+                        fontStep = min(fontStep + 1, ArticlePage.fontSizes.count - 1)
+                    }
+                    .disabled(fontStep >= ArticlePage.fontSizes.count - 1)
+                } label: {
+                    pillIcon("textformat.size")
                 }
-                .disabled(fontStep >= ArticlePage.fontSizes.count - 1)
+                .help("Text Size")
             }
-            Button(item.favorite ? "Unstar" : "Star", systemImage: item.favorite ? "star.fill" : "star") {
-                engine.update(item, PatchChanges(favorite: !item.favorite))
+            Button { engine.update(item, PatchChanges(favorite: !item.favorite)) } label: {
+                pillIcon(item.favorite ? "star.fill" : "star").foregroundStyle(item.favorite ? Theme.star : Theme.dim)
             }
+            .help(item.favorite ? "Unstar" : "Star")
             if item.location != .archive {
-                Button("Archive", systemImage: "archivebox") { engine.archive(item) }
+                Button { engine.archive(item) } label: { pillIcon("archivebox") }
+                    .help("Archive")
             }
-            Button(item.kind == .tweet ? "Open in X" : "Open Original", systemImage: "safari", action: openOriginal)
             Menu {
-                Button("Mark as Unread", systemImage: "circlebadge") { engine.update(item, PatchChanges(progress: 0)) }
+                Button(item.kind == .tweet ? "Open in X" : "Open Original", systemImage: "safari", action: openOriginal)
                 Button("Copy Link", systemImage: "link") { copyLink(to: item) }
                 if let url = URL(string: item.url) {
                     ShareLink(item: url) { Label("Share", systemImage: "square.and.arrow.up") }
                 }
+                Divider()
+                Button("Mark as Unread", systemImage: "circlebadge") { engine.update(item, PatchChanges(progress: 0)) }
                 Button("Edit Topics", systemImage: "tag") { editingTopics = true }
                 if item.status == .failed {
                     Button("Try Again", systemImage: "arrow.clockwise") { retry(item) }
                 }
             } label: {
-                Label("More", systemImage: "ellipsis.circle")
+                pillIcon("ellipsis")
             }
+            .help("More")
         }
+        .buttonStyle(.plain)
+        .menuStyle(.borderlessButton)
+        .menuIndicator(.hidden)
+        .fixedSize()
+        .foregroundStyle(Theme.dim)
+        .padding(.horizontal, 6)
+        .padding(.vertical, 3)
+        .background(.regularMaterial, in: Capsule())
+        .overlay(Capsule().strokeBorder(Theme.line.opacity(0.5)))
+    }
+
+    private func pillIcon(_ systemName: String) -> some View {
+        Image(systemName: systemName)
+            .font(.system(size: 14, weight: .medium))
+            .frame(width: 30, height: 26)
+            .contentShape(Rectangle())
     }
 
     private func openOriginal() {
