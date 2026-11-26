@@ -60,7 +60,9 @@ def figure_captions(html: str, url: str) -> dict[str, str]:
     """Each captioned image on the page: every address it might load from, to its caption."""
     captions = {}
     for figure in lxml.html.fromstring(html).iter("figure"):
-        caption = " ".join(" ".join(found.text_content() for found in figure.iter("figcaption")).split())
+        # Paragraphs inside a caption (text, then a credit) need a space between them.
+        pieces = [part.text_content() for found in figure.iter("figcaption") for part in (found.findall(".//p") or [found])]
+        caption = " ".join(" ".join(pieces).split())
         if not caption:
             continue
         for image in figure.iter("img", "source"):
@@ -82,16 +84,18 @@ def add_captions(content, captions: dict[str, str]) -> None:
         anchor = image
         while anchor.getnext() is None and not (anchor.tail or "").strip() and anchor.getparent() is not content:
             anchor = anchor.getparent()
-        following = anchor.getnext()
-        remains = "".join("".join(following.itertext()).split()) if following is not None and following.tag == "p" else ""
-        if remains and remains in "".join(caption.split()) and not (anchor.tail or "").strip():
-            tail = following.tail
-            following.clear()
-            following.tag, following.text, following.tail = "figcaption", caption, tail
-            continue
+        squashed = "".join(caption.split())
         figcaption = lxml.etree.Element("figcaption")
         figcaption.text, figcaption.tail, anchor.tail = caption, anchor.tail, None
         anchor.getparent().insert(anchor.getparent().index(anchor) + 1, figcaption)
+        # The caption's own pieces (its text, then often a credit line) may follow as paragraphs: drop them.
+        while not (figcaption.tail or "").strip():
+            following = figcaption.getnext()
+            remains = "".join("".join(following.itertext()).split()) if following is not None and following.tag == "p" else ""
+            if not remains or remains not in squashed:
+                break
+            figcaption.tail = following.tail
+            following.getparent().remove(following)
 
 
 def restore_structure(body: str | None, xml: str | None, captions: dict[str, str] | None = None) -> str:

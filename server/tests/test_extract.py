@@ -64,7 +64,7 @@ CAPTIONED = """<html><head><title>Captions</title></head><body><article>
 <figure><img src="/a.png" alt="A chart"><figcaption>Figure 1: a <em>chart</em> caption</figcaption></figure>
 <p>More padding text. More padding text. More padding text. More padding text. More padding text. More padding.</p>
 <figure><picture><source srcset="/b.webp 1x, /b@2x.webp 2x"><img data-src="/b.png" src="data:image/gif;base64,AAAA"></picture>
-<figcaption><p>Second caption. Credit: Someone</p></figcaption></figure>
+<figcaption><p>Second caption.</p><p>Credit: Someone</p></figcaption></figure>
 <p>An ordinary paragraph that follows the second figure and must stay a paragraph, with padding words.</p>
 <img src="/plain.png"><p>No figure around this one, so this stays a paragraph too, with more padding words.</p>
 </article></body></html>"""
@@ -75,5 +75,5 @@ def test_image_captions_come_through_whole_and_once():
     # trafilatura alone leaves "<p><i>chart</i>caption</p>": the words before the <em> are gone.
     assert '<img src="https://example.com/a.png" alt="A chart"><figcaption>Figure 1: a chart caption</figcaption>' in html
     assert '<img src="https://example.com/b.png"><figcaption>Second caption. Credit: Someone</figcaption>' in html
-    assert html.count("Second caption") == 1 and html.count("<figcaption>") == 2
+    assert html.count("Second caption") == 1 and html.count("Credit: Someone") == 1 and html.count("<figcaption>") == 2
     assert "<p>An ordinary paragraph that follows" in html and "<p>No figure around this one" in html
