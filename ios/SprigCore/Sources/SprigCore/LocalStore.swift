@@ -110,6 +110,10 @@ public final class LocalStore: Sendable {
             .select(listColumns)
             .filter(Column("location") == filter.location.rawValue && Column("deleted") == false)
             .order(Column("savedAt").desc)
+        if filter.location == .feed {
+            // A feed post Sprig couldn't read is only a link; it stays out of the way. Saved ones still show.
+            request = request.filter([Status.ready.rawValue, Status.pending.rawValue].contains(Column("status")))
+        }
         if filter.favoritesOnly {
             request = request.filter(Column("favorite") == true)
         }

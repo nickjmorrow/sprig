@@ -79,3 +79,20 @@ func makeItem(
     let body = try JSONCoding.encoder.encode(["at": Date(timeIntervalSince1970: 1_800_000_000.25)])
     #expect(String(data: body, encoding: .utf8) == #"{"at":"2027-01-15T08:00:00.250Z"}"#)
 }
+
+@Test func anUnknownKindReadsAsAnArticle() throws {
+    #expect(try JSONDecoder().decode([Kind].self, from: Data(#"["pdf", "podcast"]"#.utf8)) == [.pdf, .article])
+}
+
+@Test func theFeedLeavesOutPostsThatAreOnlyALink() throws {
+    let store = try LocalStore.inMemory()
+    var teaser = makeItem(id: "teaser", location: .feed)
+    teaser.status = .webOnly
+    var blocked = makeItem(id: "blocked", location: .feed)
+    blocked.status = .failed
+    var saved = makeItem(id: "saved", location: .inbox)
+    saved.status = .webOnly
+    try store.upsert([makeItem(id: "readable", location: .feed), teaser, blocked, saved])
+    #expect(try store.items(ItemFilter(location: .feed)).map(\.id) == ["readable"])
+    #expect(try store.items(ItemFilter(location: .inbox)).map(\.id) == ["saved"])
+}

@@ -91,16 +91,22 @@ def tweet_text(tweet: dict) -> str:
     return tweet["text"][start:end]
 
 
-def shared_link(tweet: dict) -> str | None:
-    """The page a tweet exists to share: its one outside link, when there's little else to it."""
+def outside_link(tweet: dict) -> str | None:
+    """The one page off X that a tweet links to, if it links to exactly one."""
     links = (tweet.get("entities") or {}).get("urls", [])
     outside = {link["expanded_url"] for link in links if urlsplit(link["expanded_url"]).netloc.lower() not in X_HOSTS}
-    if len(outside) != 1:
+    return outside.pop() if len(outside) == 1 else None
+
+
+def shared_link(tweet: dict) -> str | None:
+    """The page a tweet exists to share: its one outside link, when there's little else to it."""
+    link = outside_link(tweet)
+    if not link:
         return None
     text = tweet_text(tweet)
-    for link in links:
-        text = text.replace(link["url"], "")
-    return outside.pop() if word_count(text) <= MAX_SHARE_WORDS else None
+    for found in (tweet.get("entities") or {}).get("urls", []):
+        text = text.replace(found["url"], "")
+    return link if word_count(text) <= MAX_SHARE_WORDS else None
 
 
 def tweet_text_html(tweet: dict) -> str:

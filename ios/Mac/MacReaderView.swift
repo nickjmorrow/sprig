@@ -35,7 +35,7 @@ struct MacReaderView: View {
 
     @ViewBuilder
     private func content(_ item: Item) -> some View {
-        if item.status == .ready, !item.contentHtml.isEmpty {
+        if item.status == .ready, !item.contentHtml.isEmpty || item.kind == .pdf {
             MacArticleWebView(
                 item: item,
                 fontSize: ArticlePage.fontSizes[min(max(fontStep, 0), ArticlePage.fontSizes.count - 1)],

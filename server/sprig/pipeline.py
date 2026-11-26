@@ -1,6 +1,7 @@
 """Turns a saved link into a readable, timed, tagged item, in a background worker."""
 
 import html
+import io
 import logging
 import threading
 import time
@@ -8,12 +9,13 @@ from urllib.parse import urlsplit
 
 import httpx
 import lxml.html
+import pypdf
 
 from sprig.extract import Extracted, extract_article, site_of
 from sprig.store import Store
 from sprig.tagger import Tagger
 from sprig.timing import minutes_for, word_count
-from sprig.tweets import article_to_extracted, embedded_tweet_cards, fetch_thread, shared_link, thread_to_extracted
+from sprig.tweets import article_to_extracted, embedded_tweet_cards, fetch_thread, outside_link, shared_link, thread_to_extracted
 from sprig.urls import tweet_id
 from sprig.x_articles import article_owner, fetch_article
 
@@ -74,9 +76,41 @@ def fetch_page(url: str, http: httpx.Client) -> Extracted:
         response.raise_for_status()
     except Exception as error:
         raise FetchError(str(error) or type(error).__name__) from error
-    if "html" not in response.headers.get("content-type", "text/html"):
+    content_type = response.headers.get("content-type", "text/html")
+    if "pdf" in content_type:
+        return extract_pdf(response.content, url)
+    if "html" not in content_type:
         return link_only(url)
     return extract_article(response.text, str(response.url))
+
+
+def extract_pdf(data: bytes, url: str) -> Extracted:
+    """The app shows the PDF itself; its text is kept for the reading time, topics and search."""
+    pdf = link_only(url)
+    pdf.kind = "pdf"
+    try:
+        reader = pypdf.PdfReader(io.BytesIO(data))
+        pdf.text = "\n\n".join(page.extract_text() or "" for page in reader.pages)
+        title = (reader.metadata.title or "").strip() if reader.metadata else ""
+    except Exception as error:  # a damaged or locked file still opens in the app's viewer
+        log.warning("no text from %s: %r", url, error)
+        return pdf
+    pdf.html = text_as_html(pdf.text)
+    pdf.title = title or pdf.title
+    return pdf
+
+
+def add_linked_page(extracted: Extracted, link: str, http: httpx.Client) -> None:
+    """Put the page a tweet points at under the tweet, so the entry is more than a pointer."""
+    try:
+        page = fetch_page(link, http)
+    except FetchError as error:
+        log.info("linked page %s unavailable: %s", link, error)
+        return
+    if word_count(page.text) < MIN_WORDS:
+        return
+    extracted.html += f"<hr><h2>{html.escape(page.title)}</h2>{page.html}"
+    extracted.text += "\n\n" + page.text
 
 
 def load(item: dict, http: httpx.Client) -> Extracted:
@@ -94,7 +128,10 @@ def load(item: dict, http: httpx.Client) -> Extracted:
             article = fetch_article(owner["id_str"], http)
             cards = embedded_tweet_cards(article, http) if article else {}
             return article_to_extracted(thread, owner, article, cards)
-        return thread_to_extracted(thread)
+        extracted = thread_to_extracted(thread)
+        if link := outside_link(thread[-1]):
+            add_linked_page(extracted, link, http)
+        return extracted
     if item["source_html"]:
         return extract_article(item["source_html"], url)
     try:
@@ -121,9 +158,9 @@ def process_item(store: Store, item_id: str, *, http: httpx.Client, tagger: Tagg
         return store.update_item(item_id, status="failed", last_error=str(error)[:500] or repr(error), site=site_of(item["url"]))
     words = word_count(extracted.text)
     has_real_title = extracted.title != item["url"]
-    # Tweets are short by nature; only an empty one (endpoint down) sends him to the web.
     kind = extracted.kind or item["kind"]
-    min_words = 1 if kind == "tweet" else MIN_WORDS
+    # A PDF opens in the app whatever its text; a tweet is short by nature.
+    min_words = {"pdf": 0, "tweet": 1}.get(kind, MIN_WORDS)
     store.update_item(
         item_id,
         kind=kind,

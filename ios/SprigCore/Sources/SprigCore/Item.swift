@@ -11,7 +11,12 @@ public enum Status: String, Codable, Sendable, DatabaseValueConvertible {
 }
 
 public enum Kind: String, Codable, Sendable, DatabaseValueConvertible {
-    case article, tweet
+    case article, tweet, pdf
+
+    /// A kind this build doesn't know (a newer server) reads as an article instead of failing the whole sync.
+    public init(from decoder: Decoder) throws {
+        self = Kind(rawValue: try decoder.singleValueContainer().decode(String.self)) ?? .article
+    }
 }
 
 /// One saved thing, mirrored from the server.

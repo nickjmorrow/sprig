@@ -1,3 +1,4 @@
+import io
 import json
 
 import httpx
@@ -77,12 +78,43 @@ def test_fetch_failure_falls_back_to_shared_text(store):
     assert done["status"] == "ready" and done["title"] == "Shared title" and done["word_count"] == 300
 
 
-def test_pdf_is_web_only_with_a_title(store):
+def pdf_bytes(text: str, title: str | None = None) -> bytes:
+    from pypdf import PdfWriter
+    from pypdf.generic import DecodedStreamObject, DictionaryObject, NameObject
+
+    writer = PdfWriter()
+    page = writer.add_blank_page(width=612, height=792)
+    font = DictionaryObject({NameObject("/Type"): NameObject("/Font"), NameObject("/Subtype"): NameObject("/Type1"), NameObject("/BaseFont"): NameObject("/Helvetica")})
+    page[NameObject("/Resources")] = DictionaryObject({NameObject("/Font"): DictionaryObject({NameObject("/F1"): writer._add_object(font)})})
+    stream = DecodedStreamObject()
+    stream.set_data(f"BT /F1 12 Tf 72 720 Td ({text}) Tj ET".encode())
+    page[NameObject("/Contents")] = writer._add_object(stream)
+    if title:
+        writer.add_metadata({"/Title": title})
+    out = io.BytesIO()
+    writer.write(out)
+    return out.getvalue()
+
+
+def serve_pdf(body: bytes):
+    return client(lambda request: httpx.Response(200, content=body, headers={"content-type": "application/pdf"}))
+
+
+def test_pdf_is_ready_with_its_text_for_time_and_topics(store):
     item = store.create_item("https://example.com/papers/attention.pdf")
-    done = process_item(store, item["id"], http=serve_html("%PDF", content_type="application/pdf"), tagger=FakeTagger())
-    assert done["status"] == "web_only"
-    assert done["title"] == "attention.pdf"
-    assert done["minutes"] == 1
+    tagger = FakeTagger()
+    body = pdf_bytes(" ".join(["attention"] * 480), title="Attention Is All You Need")
+    done = process_item(store, item["id"], http=serve_pdf(body), tagger=tagger)
+    assert done["kind"] == "pdf" and done["status"] == "ready"
+    assert done["title"] == "Attention Is All You Need" and done["minutes"] == 2
+    assert "attention attention" in tagger.calls[0]["text"]
+
+
+def test_pdf_without_readable_text_still_opens_in_the_app(store):
+    item = store.create_item("https://example.com/papers/attention.pdf")
+    done = process_item(store, item["id"], http=serve_pdf(b"%PDF"), tagger=None)
+    assert done["kind"] == "pdf" and done["status"] == "ready"
+    assert done["title"] == "attention.pdf" and done["minutes"] == 1
 
 
 def test_thin_page_is_web_only_but_tagged(store):

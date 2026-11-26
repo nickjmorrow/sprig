@@ -53,7 +53,9 @@ struct ItemRow: View {
             case .failed:
                 Label("Couldn't fetch", systemImage: "exclamationmark.triangle")
                     .labelStyle(.titleAndIcon)
-            case .ready, .webOnly:
+            case .webOnly:
+                Label("Link only", systemImage: "link").labelStyle(.titleAndIcon)
+            case .ready:
                 readingTime
             }
             if let topic = item.topics.first {

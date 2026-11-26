@@ -47,7 +47,7 @@ struct ReaderView: View {
 
     @ViewBuilder
     private func content(_ item: Item) -> some View {
-        if item.status == .ready, !item.contentHtml.isEmpty {
+        if item.status == .ready, !item.contentHtml.isEmpty || item.kind == .pdf {
             ArticleWebView(
                 item: item,
                 fontSize: articleFontSize,

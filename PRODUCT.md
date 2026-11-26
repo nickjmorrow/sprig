@@ -24,7 +24,7 @@ Built for one reader. Topics come from his own short list (assigned by Claude), 
 
 - Three places: Inbox (things he saved), Feed (new RSS posts, triaged into Inbox or Archive), Archive (done, with favorites).
 - Saving happens from other apps through the Share extension; the app itself is for choosing and reading.
-- Reading happens in a clean article reader (rendered HTML, tweet threads as cards), offline on the phone.
+- Reading happens in a clean article reader (rendered HTML, tweet threads as cards), offline on the phone. PDFs open in the reader as the PDF itself and need the network.
 - Server on his home Mac (Edgar), reached over Tailscale; devices sync every minute and work offline.
 - Mac: keyboard-driven (j/k, e archive, s star, u unread, o open original, ⌘F search).
 
@@ -33,7 +33,7 @@ Built for one reader. Topics come from his own short list (assigned by Claude), 
 - Filters: time range (Any, Under 5, 5–15, 15–30, 30+), topic chips, favorites (Archive), full-text search within a tab.
 - Actions: archive, keep (Feed → Inbox), move to Inbox, star, mark unread, open original, edit an item's topics.
 - Reading a story to the end and leaving it archives it; every archive shows an Undo bar for 8 seconds.
-- Statuses an item can show: pending (being fetched), ready, failed (couldn't fetch), web only (paywall or too short; opens the page).
+- Statuses an item can show: pending (being fetched), ready, failed (couldn't fetch), web only (paywall or too short; opens the page, and its row says Link only). Feed posts that failed or are web only are left out of the Feed.
 - Home-screen widget (Up Next) on iPhone.
 - Not built: highlights and notes, newsletters, offline images, Readwise-style review.
 

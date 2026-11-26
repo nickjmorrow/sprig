@@ -32,10 +32,15 @@ struct MacArticleWebView: NSViewRepresentable {
         webView.navigationDelegate = context.coordinator
         context.coordinator.initialProgress = initialProgress
         context.coordinator.fontSize = fontSize
-        webView.loadHTMLString(
-            ArticlePage.html(for: item, fontSize: fontSize, extraCSS: Self.extraCSS),
-            baseURL: URL(string: item.url)
-        )
+        if item.kind == .pdf, let url = URL(string: item.url) {
+            // The web view shows a PDF itself; it needs the network, unlike a saved article.
+            webView.load(URLRequest(url: url))
+        } else {
+            webView.loadHTMLString(
+                ArticlePage.html(for: item, fontSize: fontSize, extraCSS: Self.extraCSS),
+                baseURL: URL(string: item.url)
+            )
+        }
         return webView
     }
 
