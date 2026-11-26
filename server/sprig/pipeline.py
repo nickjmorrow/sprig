@@ -23,6 +23,7 @@ log = logging.getLogger(__name__)
 
 MIN_WORDS = 50  # below this the page is a paywall or a stub: send him to the web
 EXCERPT_CHARS = 200
+INLINE_TAGS = {"a", "b", "strong", "i", "em", "code", "sub", "sup", "del", "span"}
 MAX_TAG_ATTEMPTS = 5
 RETAG_INTERVAL = 3600
 IDLE_WAIT = 60
@@ -146,8 +147,11 @@ def excerpt_of(extracted: Extracted) -> str:
     """The opening of what the reader will show, so it never quotes page chrome that was cleaned away."""
     if not extracted.html.strip():
         return " ".join(extracted.text.split())[:EXCERPT_CHARS]
-    shown = " ".join(lxml.html.fromstring(f"<div>{extracted.html}</div>").itertext())
-    return " ".join(shown.split())[:EXCERPT_CHARS]
+    shown = lxml.html.fromstring(f"<div>{extracted.html}</div>")
+    for element in shown.iter():
+        if element.tag not in INLINE_TAGS:  # words in separate blocks need a space; bold mid-word must not get one
+            element.tail = " " + (element.tail or "")
+    return " ".join(shown.text_content().split())[:EXCERPT_CHARS]
 
 
 def process_item(store: Store, item_id: str, *, http: httpx.Client, tagger: Tagger | None) -> dict:
