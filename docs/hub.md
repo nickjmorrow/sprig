@@ -44,4 +44,4 @@ osascript -e 'quit app "Sprig"'; rm -rf /Applications/Sprig.app; ditto build/mac
 
 Make it a token with `uv run sprig token add roland` on Edgar, then **restart the server** (`launchctl kickstart -k gui/$(id -u)/com.nicholai.sprig`): it reads `tokens.json` only at startup. Paste the token into Sprig → Settings (⌘,).
 
-Keys: `j`/`k` next/previous, `e` archive, `s` star, `u` mark unread, `o` open original, `i` move to Inbox, ⌘+ / ⌘− text size, ⌘R sync.
+Keys: `j`/`k` next/previous, `e` archive, `s` star, `u` mark unread, `o` open original, `i` move to Inbox, ⌘⇧C copy link, ⌘+ / ⌘− text size, ⌘R sync.

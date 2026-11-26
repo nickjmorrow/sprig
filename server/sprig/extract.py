@@ -1,5 +1,6 @@
 """Clean article text and metadata out of a web page."""
 
+import re
 from dataclasses import dataclass
 from urllib.parse import urljoin, urlsplit
 
@@ -10,6 +11,11 @@ import trafilatura
 DROP_TAGS = ("script", "style", "iframe", "form", "noscript", "object", "embed")
 KEEP_ATTRIBUTES = {"href", "src", "alt"}
 URL_ATTRIBUTES = ("href", "src")
+HEADING_TAGS = {"h1", "h2", "h3", "h4", "h5", "h6"}
+BLOCK_TAGS = HEADING_TAGS | {"p", "ul", "ol", "blockquote", "pre", "table"}
+BREADCRUMB_SEPARATOR = re.compile(r"[/›»>|]")
+BREADCRUMB_WORDS = 8  # "/ Claude Forward Deployed Engineer": the current page, unlinked, may end the trail
+PREAMBLE_WORDS = 100  # more than this above the headline is content, not site chrome
 IMAGE_SOURCE_ATTRIBUTES = ("src", "data-src", "data-lazy-src", "data-original")
 INLINE_PARENTS = {"p", "li", "td", "th", "h1", "h2", "h3", "h4", "h5", "h6", "a", "strong", "b", "i", "em", "blockquote"}
 
@@ -98,6 +104,71 @@ def add_captions(content, captions: dict[str, str]) -> None:
             following.getparent().remove(following)
 
 
+def unwrap_block_links(root) -> None:
+    """A card that is one big link (a number, a heading, a blurb) would read as a wall of underlined
+    text. Keep the link on its heading only and let the rest be ordinary blocks."""
+    for link in list(root.iter("a")):
+        blocks = [child for child in link if child.tag in BLOCK_TAGS]
+        if not blocks:
+            # A card's bold title runs straight into its blurb once the layout is gone: part them.
+            for bold in link.iter("strong", "b"):
+                if (bold.tail or "")[:1].isalnum():
+                    bold.tail = " " + bold.tail
+            continue
+        parent, lead = link.getparent(), (link.text or "").strip()
+        titled = next((block for block in blocks if block.tag in HEADING_TAGS), blocks[0])
+        pieces = []
+        if lead and not lead.isdigit():
+            pieces.append(paragraph(lead))
+        for child in list(link):
+            tail, child.tail = (child.tail or "").strip(), None
+            if child is titled:
+                inner = lxml.etree.Element("a", href=link.get("href", ""))
+                inner.text = (f"{lead}. " if lead.isdigit() else "") + (child.text or "")
+                inner.extend(list(child))
+                child.text = None
+                child.append(inner)
+            pieces.append(child)
+            if tail:
+                pieces.append(paragraph(tail))
+        if (link.tail or "").strip():
+            pieces.append(paragraph(link.tail.strip()))
+        position = parent.index(link)
+        parent.remove(link)
+        parent[position:position] = pieces
+        if parent.tag == "p" and not (parent.text or "").strip() and parent.getparent() is not None:
+            # Blocks can't sit inside a paragraph: lift them out of the one that held the link.
+            outer = parent.getparent()
+            at = outer.index(parent)
+            children = list(parent)
+            if children:
+                children[-1].tail = parent.tail
+            outer.remove(parent)
+            outer[at:at] = children
+
+
+def paragraph(text: str):
+    element = lxml.etree.Element("p")
+    element.text = text
+    return element
+
+
+def drop_breadcrumbs(root) -> None:
+    """Home / Section / Page: a paragraph that is only links and separators is site navigation."""
+    for candidate in list(root.iter("p")):
+        links = candidate.findall("a")
+        loose = (candidate.text or "") + "".join(link.tail or "" for link in links)
+        if links and len(links) == len(candidate) and BREADCRUMB_SEPARATOR.search(loose) and len(loose.split()) <= BREADCRUMB_WORDS:
+            tail, parent = candidate.tail, candidate.getparent()
+            previous = candidate.getprevious()
+            parent.remove(candidate)
+            if tail and tail.strip():
+                if previous is not None:
+                    previous.tail = (previous.tail or "") + tail
+                else:
+                    parent.text = (parent.text or "") + tail
+
+
 def restore_structure(body: str | None, xml: str | None, captions: dict[str, str] | None = None) -> str:
     """Put back what trafilatura's HTML output flattens. It writes all code as <pre> (a block as
     <pre><pre>, inline code as a <pre> mid-sentence, which would break the line) and every list as
@@ -117,6 +188,8 @@ def restore_structure(body: str | None, xml: str | None, captions: dict[str, str
         for element, is_numbered in zip(lists, numbered):
             if is_numbered:
                 element.tag = "ol"
+    unwrap_block_links(root)
+    drop_breadcrumbs(root)
     content = root.find("body") if root.find("body") is not None else root
     add_captions(content, captions or {})
     return (content.text or "") + "".join(lxml.etree.tostring(child, encoding="unicode", method="html") for child in content)
@@ -147,12 +220,19 @@ def extract_article(html: str, url: str) -> Extracted:
 
 
 def drop_title_heading(html: str, title: str) -> str:
-    """The reader shows the title itself, so a leading <h1> repeating it would print it twice."""
-    stripped = html.lstrip()
-    if not stripped.startswith("<h1>"):
-        return html
-    end = stripped.find("</h1>")
-    heading = lxml.html.fromstring(stripped[: end + len("</h1>")]).text_content().strip()
-    if heading.casefold() != title.strip().casefold():
-        return html
-    return stripped[end + len("</h1>") :].lstrip()
+    """The reader shows the title itself, so the page's own <h1> repeating it would print it twice.
+    What sits above that headline (a logo, a login note, "Back") is the site's chrome: drop it too."""
+    wanted = " ".join(title.split()).casefold()
+    for found in re.finditer(r"<h1>.*?</h1>", html, re.DOTALL):
+        heading = " ".join(lxml.html.fromstring(found.group(0)).text_content().split()).casefold()
+        if heading != wanted:
+            continue
+        above = html[: found.start()]
+        if above.strip() and word_count_of(above) > PREAMBLE_WORDS:
+            return html
+        return html[found.end() :].lstrip()
+    return html
+
+
+def word_count_of(html: str) -> int:
+    return len(lxml.html.fromstring(f"<div>{html}</div>").text_content().split())

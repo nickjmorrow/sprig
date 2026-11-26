@@ -12,6 +12,7 @@ struct MacItemList: View {
     @State private var topics: [String] = []
     @State private var filter: ItemFilter
     @State private var searchText = ""
+    @State private var hasLoaded = false
     @FocusState private var searchFieldFocus: Bool
     @AppStorage private var savedFilter: String
 
@@ -21,7 +22,16 @@ struct MacItemList: View {
         _items = items
         _isSearchFocused = isSearchFocused
         _savedFilter = AppStorage(wrappedValue: "", "filter.\(location.rawValue)")
-        _filter = State(initialValue: ItemFilter(location: location))
+        // Restored here, not after appearing: the bar would otherwise draw once with the defaults and jump.
+        _filter = State(initialValue: Self.savedFilter(for: location))
+    }
+
+    static func savedFilter(for location: Location) -> ItemFilter {
+        guard let data = UserDefaults.standard.string(forKey: "filter.\(location.rawValue)")?.data(using: .utf8),
+              var saved = try? JSONDecoder().decode(ItemFilter.self, from: data),
+              saved.location == location else { return ItemFilter(location: location) }
+        saved.query = ""
+        return saved
     }
 
     var body: some View {
@@ -40,7 +50,7 @@ struct MacItemList: View {
             }
             .background(.bar)
         }
-        .overlay { if items.isEmpty { emptyState } }
+        .overlay { if hasLoaded && items.isEmpty { emptyState } }
         .safeAreaInset(edge: .bottom, spacing: 0) { UndoArchiveBar() }
         .navigationTitle(title)
         .onChange(of: searchFieldFocus) { isSearchFocused = searchFieldFocus }
@@ -50,8 +60,10 @@ struct MacItemList: View {
         .onChange(of: items.map(\.id)) { old, new in advanceSelection(old: old, new: new) }
         .onChange(of: engine.lastSync) { loadTopics() }
         .onAppear {
-            restoreFilter()
+            // Read before the first frame: the list would otherwise show the last section's stories, then swap.
             loadTopics()
+            items = (try? engine.store.items(filter)) ?? []
+            hasLoaded = true
         }
     }
 
@@ -142,6 +154,7 @@ struct MacItemList: View {
         Button("Open Original", systemImage: "safari") {
             if let url = URL(string: item.url) { NSWorkspace.shared.open(url) }
         }
+        Button("Copy Link", systemImage: "link") { copyLink(to: item) }
     }
 
     /// When the selected story is archived or moved, select the one after it. A story that only
@@ -174,14 +187,6 @@ struct MacItemList: View {
 
     private func loadTopics() {
         topics = (try? engine.store.topics()) ?? []
-    }
-
-    private func restoreFilter() {
-        guard let data = savedFilter.data(using: .utf8),
-              var saved = try? JSONDecoder().decode(ItemFilter.self, from: data),
-              saved.location == location else { return }
-        saved.query = filter.query
-        filter = saved
     }
 
     private func saveFilter() {

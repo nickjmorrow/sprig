@@ -103,3 +103,13 @@ struct ItemRow: View {
         return text
     }
 }
+
+/// Puts the story's address on the clipboard.
+@MainActor func copyLink(to item: Item) {
+    #if os(macOS)
+    NSPasteboard.general.clearContents()
+    NSPasteboard.general.setString(item.url, forType: .string)
+    #else
+    UIPasteboard.general.string = item.url
+    #endif
+}

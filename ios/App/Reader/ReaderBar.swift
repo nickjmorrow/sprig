@@ -42,6 +42,7 @@ struct ReaderBar: ToolbarContent {
             Menu {
                 Button("Mark as Unread", systemImage: "circlebadge", action: onMarkUnread)
                 Button("Open Original", systemImage: "safari") { openOriginal() }
+                Button("Copy Link", systemImage: "link") { copyLink(to: item) }
                 if let url = URL(string: item.url) {
                     ShareLink(item: url) { Label("Share", systemImage: "square.and.arrow.up") }
                 }

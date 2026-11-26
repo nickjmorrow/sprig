@@ -78,6 +78,7 @@ struct MacReaderView: View {
             Button(item.kind == .tweet ? "Open in X" : "Open Original", systemImage: "safari", action: openOriginal)
             Menu {
                 Button("Mark as Unread", systemImage: "circlebadge") { engine.update(item, PatchChanges(progress: 0)) }
+                Button("Copy Link", systemImage: "link") { copyLink(to: item) }
                 if let url = URL(string: item.url) {
                     ShareLink(item: url) { Label("Share", systemImage: "square.and.arrow.up") }
                 }

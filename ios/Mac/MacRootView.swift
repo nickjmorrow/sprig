@@ -87,11 +87,12 @@ struct MacRootView: View {
         let toggleStar: Action = { engine.update(item, PatchChanges(favorite: !item.favorite)) }
         let markUnread: Action = { engine.update(item, PatchChanges(progress: 0)) }
         let openOriginal: Action = { if let url = URL(string: item.url) { NSWorkspace.shared.open(url) } }
+        let copy: Action = { copyLink(to: item) }
         let next: Action = { step(1) }
         let previous: Action = { step(-1) }
         return StoryActions(
             item: item, archive: archive, moveToInbox: moveToInbox, toggleStar: toggleStar,
-            markUnread: markUnread, openOriginal: openOriginal, next: next, previous: previous
+            markUnread: markUnread, openOriginal: openOriginal, copyLink: copy, next: next, previous: previous
         )
     }
 

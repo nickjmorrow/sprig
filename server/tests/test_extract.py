@@ -77,3 +77,34 @@ def test_image_captions_come_through_whole_and_once():
     assert '<img src="https://example.com/b.png"><figcaption>Second caption. Credit: Someone</figcaption>' in html
     assert html.count("Second caption") == 1 and html.count("Credit: Someone") == 1 and html.count("<figcaption>") == 2
     assert "<p>An ordinary paragraph that follows" in html and "<p>No figure around this one" in html
+
+
+CATALOG = """<html><head><title>Learning Path</title></head><body><main>
+<p>This site hosts our course materials. You are logging into it to reach them, on a separate platform.</p>
+<p><a href="/">Back</a></p><img src="/logo.png" alt="Go home">
+<h1>Learning Path</h1>
+<p><a href="/">Home</a>/</p><p><a href="/paths">Learning paths</a>/ Learning Path</p>
+<p>Take a customer from a first use case to a working pilot, on site, with enough words here to be kept.</p>
+<a href="/courses/one"><span>1</span><h4>Capabilities and Limits</h4><p>About 60 min. The limits you will be explaining
+to users from the first day of a pilot, in enough words to be kept by the extractor.</p></a>
+<a href="/courses/two"><span>2</span><h4>Fluency for Builders</h4><p>About 45 min. Delegation, description, discernment
+and diligence, applied to building, again in enough words to be kept.</p></a>
+<p>Plain closing paragraph with a normal <a href="/x">inline link</a> that must stay exactly as it is, padded out.</p>
+</main></body></html>"""
+
+
+def test_course_cards_and_site_chrome_read_cleanly():
+    html = re.sub(r">\s+<", "><", extract_article(CATALOG, "https://example.com/path").html)
+    # Nothing from above the headline, no second copy of the title, no breadcrumb trail.
+    assert "logging into" not in html and "Back" not in html and "logo.png" not in html
+    assert "<h1>" not in html and "Learning paths" not in html
+    # Each card: the link on its heading only, the blurb an ordinary paragraph.
+    assert '<h4><a href="https://example.com/courses/one">1. Capabilities and Limits</a></h4><p>About 60 min.' in html
+    assert '<h4><a href="https://example.com/courses/two">2. Fluency for Builders</a></h4>' in html
+    assert 'a normal <a href="https://example.com/x">inline link</a> that must stay' in html
+
+
+def test_a_long_introduction_above_the_headline_is_kept():
+    intro = "<p>" + "A real opening paragraph before the headline. " * 20 + "</p>"
+    page = f"<html><head><title>Late Title</title></head><body><article>{intro}<h1>Late Title</h1><p>{'Body text. ' * 30}</p></article></body></html>"
+    assert "A real opening paragraph" in extract_article(page, "https://example.com/late").html

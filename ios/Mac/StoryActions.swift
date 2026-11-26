@@ -11,6 +11,7 @@ struct StoryActions {
     let toggleStar: Action
     let markUnread: Action
     let openOriginal: Action
+    let copyLink: Action
     let next: Action
     let previous: Action
 }
@@ -55,6 +56,9 @@ struct StoryCommands: Commands {
                 .disabled(actions == nil)
             Button("Open Original") { actions?.openOriginal() }
                 .keyboardShortcut("o", modifiers: [])
+                .disabled(actions == nil)
+            Button("Copy Link") { actions?.copyLink() }
+                .keyboardShortcut("c", modifiers: [.command, .shift])
                 .disabled(actions == nil)
             Divider()
             Button("Bigger Text") { fontStep = min(fontStep + 1, ArticlePage.fontSizes.count - 1) }
